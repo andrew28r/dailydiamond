@@ -30,6 +30,8 @@ async function loadPlayerGame() {
       ? JSON.parse(playerGame.guesses)
       : [];
 
+    removeDuplicateGuesses();
+    
     statusGameWin = playerGame.win || "false";
     statusGameCompleted = playerGame.completed || "false";
     statusCompletedSameDay = playerGame.completedSameDay || "false";
@@ -1355,4 +1357,24 @@ function updateHowTo() {
     howTo.style.display = "none";
   }
 
+}
+
+function removeDuplicateGuesses() {
+  const before = guesses.length;
+
+  guesses = [
+    ...new Map(
+      guesses.map(g => [g.name.toLowerCase(), g])
+    ).values()
+  ];
+
+  const after = guesses.length;
+
+  if (before !== after) {
+    console.log(`Removed ${before - after} duplicate guesses`);
+
+    document.getElementById("guessNumber").textContent = guesses.length;
+
+    saveGame();
+  }
 }
