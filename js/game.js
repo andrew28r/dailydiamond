@@ -834,24 +834,7 @@ function renderLastGuess() {
 /* =========================
    DOCUMENT EVENTS
 ========================= */
-document.getElementById("testGameBtn").addEventListener("click", () => {
-  console.log("BUTTON CLICKED");
 
-  const [year, month, day] = selectedDate.split("-").map(Number);
-
-  const base = new Date(
-    `${selectedDate}T12:00:00`
-  );
-
-  base.setDate(base.getDate() + 1);
-
-  const nextDate = formatLocalDate(base);
-
-  console.log("Current page date:", selectedDate);
-  console.log("Next date:", nextDate);
-
-  window.location.href = `game.html?date=${nextDate}`;
-});
 
 
 function formatLocalDate(date) {
