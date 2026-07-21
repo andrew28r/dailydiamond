@@ -525,6 +525,7 @@ async function guessPlayer() {
   render();
   document.getElementById("guessNumber").textContent = guesses.length;
 
+  renderStatHeader();
   await checkWin();
   renderLastGuess();
 
@@ -1335,6 +1336,15 @@ function renderStatHeader() {
     saves: "SV",
     gamesPlayed: "G"
   };
+
+
+  // Hide header until at least one guess exists
+  if (guesses.length === 0) {
+    statHeader.innerHTML = "";
+    statHeader.style.display = "none";
+    return;
+  }
+
 
   const abbr = abbreviations[gameInfoObj.sortStat] || "";
 
