@@ -34,6 +34,7 @@ async function loadPlayerGame() {
     statusGameCompleted = playerGame.completed || "false";
     statusCompletedSameDay = playerGame.completedSameDay || "false";
     totalHintClicks = Number(playerGame.hintClicks || 0);
+    document.getElementById("hintNumber").textContent = totalHintClicks;
 
   } else {
 
@@ -874,6 +875,8 @@ document.getElementById("hintBtn").addEventListener("click", async () => {
 
     hintClickCount++;
     totalHintClicks++;
+
+    document.getElementById("hintNumber").textContent = totalHintClicks;
 
     await saveGame();
 

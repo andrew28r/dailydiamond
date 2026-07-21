@@ -48,15 +48,21 @@
           <span class="guess-label">Guesses:</span>
           <span id="guessNumber" class="guess-number">0</span>
         </div>
+
+        <div class="guess-info">
+            <span class="guess-label">Hints:</span>
+            <span id="hintNumber" class="guess-number">0</span>
+        </div>
       </div>
 
-      <div id="hint"></div>
     </div>
 
     <input id="search" placeholder="Guess a player..." autocomplete="off">
     <div id="dropdown" class="dropdown"></div>
-
-    <div id="message" class="message"></div>
+    <div class="hint-message">
+        <div id="message" class="message"></div>
+        <div id="hint"></div>
+    </div>
   </div>
 
   <div id="howTo" class="how-to-card">
