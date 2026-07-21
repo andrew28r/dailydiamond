@@ -170,6 +170,7 @@ const message = document.getElementById("message");
 const gameTitle = document.getElementById("gameTitle");
 const hint = document.getElementById("hint");
 const menu = document.getElementById("menu");
+const statHeader = document.getElementById("statHeader");
 
 
 let gameLocked = false;
@@ -1337,7 +1338,6 @@ function renderStatHeader() {
     gamesPlayed: "G"
   };
 
-
   // Hide header until at least one guess exists
   if (guesses.length === 0) {
     statHeader.innerHTML = "";
@@ -1345,16 +1345,13 @@ function renderStatHeader() {
     return;
   }
 
+  statHeader.style.display = "grid";
 
   const abbr = abbreviations[gameInfoObj.sortStat] || "";
 
-  const html = `
+  statHeader.innerHTML = `
     <div></div>
     <div></div>
     <div class="stat-label">${abbr}</div>
   `;
-
-  document.getElementById("statHeader").innerHTML = html;
-
-  //document.getElementById("leaderboardStatHeader").innerHTML = html;
 }
