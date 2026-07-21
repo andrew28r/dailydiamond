@@ -1264,6 +1264,7 @@ function clearHintData() {
     await loadLeaderboard();  // <-- PUT IT RIGHT AFTER THIS
 
 
+    loadHintStage();
     updateHowTo();
 
     // Restore completed game popup after reload
