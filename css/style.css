@@ -1279,3 +1279,47 @@ button:focus-visible {
     margin: 25px auto;
     text-align: center;
 }
+
+/* ---------- How To Card ---------- */
+
+.how-to-card {
+
+  width:100%;
+
+  max-width:400px;
+
+  margin:12px auto 0;
+
+  padding:10px 12px;
+
+  border:2px solid #c2c2c2;
+
+  border-radius:8px;
+
+  background:#c2c2c2;
+
+  text-align:center;
+
+  display:none;
+
+}
+
+
+.how-to-card h3 {
+
+  margin:0 0 8px;
+
+  font-size:16px;
+
+  font-weight:700;
+
+}
+
+
+.how-to-card p {
+
+  margin:6px 0;
+
+  font-size:14px;
+
+}

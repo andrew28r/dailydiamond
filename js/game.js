@@ -529,6 +529,7 @@ async function guessPlayer() {
   renderStatHeader();
   await checkWin();
   renderLastGuess();
+  updateHowTo();
 
   input.value = "";
   dropdown.style.display = "none";
@@ -833,6 +834,7 @@ function renderLastGuess() {
 /* =========================
    DOCUMENT EVENTS
 ========================= */
+/*
 document.getElementById("testGameBtn").addEventListener("click", () => {
   console.log("BUTTON CLICKED");
 
@@ -850,7 +852,7 @@ document.getElementById("testGameBtn").addEventListener("click", () => {
   console.log("Next date:", nextDate);
 
   window.location.href = `game.html?date=${nextDate}`;
-});
+});*/
 
 function formatLocalDate(date) {
   const year = date.getFullYear();
@@ -1278,6 +1280,8 @@ function clearHintData() {
     await loadLeaderboard();  // <-- PUT IT RIGHT AFTER THIS
 
 
+    updateHowTo();
+
     // Restore completed game popup after reload
     if (statusGameCompleted === "true") {
       gameLocked = true;
@@ -1354,4 +1358,16 @@ function renderStatHeader() {
     <div></div>
     <div class="stat-label">${abbr}</div>
   `;
+}
+
+function updateHowTo() {
+
+  const howTo = document.getElementById("howTo");
+
+  if (guesses.length === 0) {
+    howTo.style.display = "block";
+  } else {
+    howTo.style.display = "none";
+  }
+
 }
