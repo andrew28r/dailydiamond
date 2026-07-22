@@ -255,7 +255,7 @@ const STATS = [
   { stat: "triples", title: "Triples", group: "hitting", includeTeamSeason: false },
   { stat: "doubles", title: "Doubles", group: "hitting", includeTeamSeason: false },
   { stat: "hits", title: "Hits", group: "hitting", includeTeamSeason: false },
-  { stat: "walks", title: "Walks", group: "hitting", includeTeamSeason: false },
+  { stat: "baseOnBalls", title: "Walks", group: "hitting", includeTeamSeason: false },
   { stat: "rbi", title: "RBI", group: "hitting", includeTeamSeason: false },
   { stat: "stolenBases", title: "Stolen Bases", group: "hitting", includeTeamSeason: false },
 
@@ -1380,7 +1380,7 @@ function renderStatHeader() {
     triples: "3B",
     doubles: "2B",
     hits: "H",
-    walks: "BB",
+    baseOnBalls: "BB",
     rbi: "RBI",
     stolenBases: "SB",
     wins: "W",
