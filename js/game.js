@@ -895,6 +895,14 @@ document.getElementById("menuBtn").onclick = () => {
 };
 
 document.getElementById("hintBtn").addEventListener("click", async () => {
+   
+    if (gameLocked || statusGameCompleted === "true") {
+        hint.textContent = "";
+        menu.classList.add("hidden");
+        return;
+    }
+
+
     const guessed = guesses.map(g => g.name.toLowerCase());
 
     const player = leaderboard
@@ -1015,8 +1023,14 @@ document.addEventListener("click", (e) => {
   if (!wrapper.contains(e.target)) {
     menu.classList.add("hidden");
   }
+  
 });
 
+document.getElementById("leaderboardPopup").addEventListener("click", (e) => {
+    if (e.target.id === "leaderboardPopup") {
+        closeLeaderboard();
+    }
+});
 
 
 
@@ -1121,6 +1135,16 @@ function applyLockUI() {
   if (gameLocked) {
     input.disabled = true;
     input.placeholder = "Game finished";
+
+    const hintBtn = document.getElementById("hintBtn");
+    if (hintBtn) {
+      hintBtn.disabled = true;
+    }
+
+    const giveUpBtn = document.getElementById("giveUpBtn");
+    if (giveUpBtn) {
+      giveUpBtn.disabled = true;
+    }
   }
 }
 function getEasternDateString() {
