@@ -41,7 +41,14 @@ async function loadPlayerGame() {
     statusGameWin = playerGame.win || "false";
     statusGameCompleted = playerGame.completed || "false";
     statusCompletedSameDay = playerGame.completedSameDay || "false";
+
     totalHintClicks = Number(playerGame.hintClicks || 0);
+
+    // LOAD HINT DATA FROM SUPABASE
+    hintClickCount = Number(playerGame.hintStage || 0);
+
+    hintedPlayer = playerGame.hintPlayer || null;
+
     document.getElementById("hintNumber").textContent = totalHintClicks;
 
   } else {
@@ -49,6 +56,9 @@ async function loadPlayerGame() {
     guesses = [];
     statusGameWin = "false";
     statusGameCompleted = "false";
+
+    hintClickCount = 0;
+    hintedPlayer = null;
 
   }
 
@@ -60,6 +70,7 @@ async function loadPlayerGame() {
   console.log("Loaded guesses:", guesses);
 }
 
+
 window.addPlayerGame = async function (
   date,
   guesses = "",
@@ -67,7 +78,9 @@ window.addPlayerGame = async function (
   win = "",
   completed = "",
   completedSameDay = "",
-  hintClicks = "0"
+  hintClicks = "0",
+  hintStage = 0,
+  hintPlayer = null
 ) {
   const playerId = getPlayerId();
   if (!playerId) return null;
@@ -82,7 +95,9 @@ window.addPlayerGame = async function (
         win,
         completed,
         completedSameDay,
-        hintClicks
+        hintClicks,
+        hintStage,
+        hintPlayer
     }, {
         onConflict: "playerId,date"
     })
@@ -105,7 +120,9 @@ window.updatePlayerGame = async function (
   win,
   completed,
   completedSameDay,
-  hintClicks
+  hintClicks,
+  hintStage,
+  hintPlayer
 ) {
   const playerId = getPlayerId();
   if (!playerId) return null;
@@ -118,7 +135,9 @@ window.updatePlayerGame = async function (
       win,
       completed,
       completedSameDay,
-      hintClicks
+      hintClicks,
+      hintStage,
+      hintPlayer
     })
     .eq("playerId", playerId)
     .eq("date", date)
@@ -344,7 +363,11 @@ async function saveGame() {
       selectedDate === getEasternDateString()
         ? "true"
         : "false",
-    hintClicks: String(totalHintClicks)
+    hintClicks: String(totalHintClicks),
+
+    hintStage: hintClickCount,
+
+    hintPlayer: hintedPlayer
   };
 
   playerGame = await addPlayerGame(
@@ -354,7 +377,9 @@ async function saveGame() {
     gameData.win,
     gameData.completed,
     gameData.completedSameDay,
-    gameData.hintClicks
+    gameData.hintClicks,
+    gameData.hintStage,
+    gameData.hintPlayer
   );
 
   await updateGamesPlayed(getPlayerId());
@@ -1135,25 +1160,30 @@ function getGuessStats() {
     });
 }
 
-function getHintStageKey() {
-  return `hintStage_${selectedDate}`;
-}
-
-function getHintStage() {
-  return Number(localStorage.getItem(getHintStageKey()) || 0);
-  
-}
-
 function setHintStage(value) {
-  localStorage.setItem(getHintStageKey(), value);
+  hintClickCount = value;
+}
+
+
+function setHintPlayer(player) {
+  hintedPlayer = player;
+}
+
+
+function clearHintData() {
+
+  hintedPlayer = null;
+  hintClickCount = 0;
+
+  hint.textContent = "";
+
 }
 
 function loadHintStage() {
-    const stage = getHintStage();
+
+    const stage = hintClickCount;
 
     if (!stage) return;
-
-    hintedPlayer = getHintPlayer();
 
     if (!hintedPlayer) return;
 
@@ -1189,35 +1219,7 @@ function loadHintStage() {
     }
 }
 
-function getHintPlayerKey() {
-  return `hintPlayer_${selectedDate}`;
-}
 
-function setHintPlayer(player) {
-  localStorage.setItem(
-    getHintPlayerKey(),
-    JSON.stringify(player)
-  );
-}
-
-function getHintPlayer() {
-  const saved = localStorage.getItem(getHintPlayerKey());
-
-  return saved ? JSON.parse(saved) : null;
-}
-
-function clearHintPlayer() {
-  localStorage.removeItem(getHintPlayerKey());
-}
-
-function clearHintData() {
-  localStorage.removeItem(getHintStageKey());
-  localStorage.removeItem(getHintPlayerKey());
-
-  hintedPlayer = null;
-  hintClickCount = 0;
-  hint.textContent = "";
-}
 
 
 /* =========================
@@ -1270,8 +1272,6 @@ function clearHintData() {
     GAME = gameInfoObj;
 
     await loadPlayerGame();
-
-    hintClickCount = getHintStage();
 
     await loadLeaderboard();  // <-- PUT IT RIGHT AFTER THIS
 
