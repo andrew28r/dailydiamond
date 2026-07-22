@@ -1294,8 +1294,6 @@ function clearHintData() {
     }
 
 
-    loadHintStage();
-
     resetInactivityTimer();
 
     startAutoSave();
