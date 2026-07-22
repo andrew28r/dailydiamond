@@ -727,43 +727,26 @@ async function openGiveUpPopup() {
 
 
 
-function getGameFromSeed(seed, dateString) {
-  const rules = getDailyGameRules(dateString);
-
-  console.log("Generating:", dateString);
-  console.log("Rules:", rules);
-
+function getGameFromSeed(seed) {
   const r1 = seededRandom(seed);
   const r2 = seededRandom(seed + 1);
   const r3 = seededRandom(seed + 2);
   const r4 = seededRandom(seed + 3);
   const r5 = seededRandom(seed + 4);
 
-  let isTeamGame;
-
-  if (rules.type === "random") {
-    isTeamGame = r1 < 0.35;
-  } else {
-    isTeamGame = rules.teamOnly;
-  }
+  const isTeamGame = r1 < 0.35;
 
   const team = isTeamGame
     ? TEAMS[Math.floor(r2 * TEAMS.length)]
     : null;
 
-
   let availableStats = STATS;
 
   if (isTeamGame) {
-    availableStats = STATS.filter(
-      s => s.includeTeamSeason !== false
-    );
+    availableStats = STATS.filter(s => s.includeTeamSeason !== false);
   }
 
-  const stat = availableStats[
-    Math.floor(r3 * availableStats.length)
-  ];
-
+  const stat = availableStats[Math.floor(r3 * availableStats.length)];
 
   let game = {
     group: stat.group,
@@ -775,18 +758,12 @@ function getGameFromSeed(seed, dateString) {
     game.teamName = team.name;
   }
 
-  if (
-    rules.type === "career" ||
-    (rules.type === "random" && r4 < 0.33)
-  ) {
+  if (r4 < 0.33) {
     game.stats = "career";
     game.title = isTeamGame
       ? `Most Career ${stat.title} for ${team.name}`
       : `Most Career ${stat.title}`;
-  } else if (
-    rules.type === "season" ||
-    (rules.type === "random" && r4 < 0.66)
-  ) {
+  } else if (r4 < 0.66) {
     const year = YEARS[Math.floor(r5 * YEARS.length)];
 
     game.stats = "season";
@@ -811,10 +788,7 @@ function getGameFromSeed(seed, dateString) {
 }
 
 function getGameForDate(dateString) {
-  return getGameFromSeed(
-    getEasternDayNumberFromDate(dateString),
-    dateString
-  );
+  return getGameFromSeed(getEasternDayNumberFromDate(dateString));
 }
 
 async function generateUniqueGame(dateString) {
@@ -841,7 +815,7 @@ async function generateUniqueGame(dateString) {
   let offset = 0;
 
   while (offset < 1000) {
-    const game = getGameFromSeed(baseSeed + offset, dateString);
+    const game = getGameFromSeed(baseSeed + offset);
 
     if (!used.has(getGameSignature(game))) {
       return game;
@@ -1461,47 +1435,3 @@ function resetInactivityTimer() {
 ].forEach(event => {
   document.addEventListener(event, resetInactivityTimer);
 });
-
-
-function getDailyGameRules(dateString) {
-  const date = new Date(dateString + "T00:00:00");
-
-  switch (date.getDay()) {
-
-    case 1: // Monday
-      return {
-        type: "decade",
-        teamOnly: true
-      };
-
-    case 2: // Tuesday
-      return {
-        type: "season",
-        teamOnly: false
-      };
-
-    case 3: // Wednesday
-      return {
-        type: "career",
-        teamOnly: false
-      };
-
-    case 4: // Thursday
-      return {
-        type: "decade",
-        teamOnly: false
-      };
-
-    case 5: // Friday
-      return {
-        type: "career",
-        teamOnly: true
-      };
-
-    default: // Saturday + Sunday
-      return {
-        type: "random",
-        teamOnly: null
-      };
-  }
-}
