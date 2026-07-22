@@ -15,6 +15,12 @@ let statusGameWin = "false";
 let statusGameCompleted = "false";
 let statusCompletedSameDay = "false";
 
+let inactivityTimer;
+
+const TIMEOUT_MINUTES = 30;
+const TIMEOUT_MS = TIMEOUT_MINUTES * 60 * 1000;
+
+
 const today = getEasternDateString();
 if (selectedDate > today) {
     window.location.href = "index.html";
@@ -30,8 +36,8 @@ async function loadPlayerGame() {
       ? JSON.parse(playerGame.guesses)
       : [];
 
-    removeDuplicateGuesses();
-    
+    await removeDuplicateGuesses();
+
     statusGameWin = playerGame.win || "false";
     statusGameCompleted = playerGame.completed || "false";
     statusCompletedSameDay = playerGame.completedSameDay || "false";
@@ -98,7 +104,8 @@ window.updatePlayerGame = async function (
   guessesNumber,
   win,
   completed,
-  completedSameDay
+  completedSameDay,
+  hintClicks
 ) {
   const playerId = getPlayerId();
   if (!playerId) return null;
@@ -110,7 +117,8 @@ window.updatePlayerGame = async function (
       guessesNumber,
       win,
       completed,
-      completedSameDay
+      completedSameDay,
+      hintClicks
     })
     .eq("playerId", playerId)
     .eq("date", date)
@@ -537,7 +545,9 @@ async function guessPlayer() {
   input.value = "";
   dropdown.style.display = "none";
   
+  clearTimeout(inactivityTimer);
   await saveGame();
+  resetInactivityTimer();
 }
 
 async function checkWin() {
@@ -1286,6 +1296,8 @@ function clearHintData() {
 
     loadHintStage();
 
+    resetInactivityTimer();
+
     startAutoSave();
 
     console.log("Boot finished");
@@ -1359,7 +1371,7 @@ function updateHowTo() {
 
 }
 
-function removeDuplicateGuesses() {
+async function removeDuplicateGuesses() {
   const before = guesses.length;
 
   guesses = [
@@ -1375,6 +1387,29 @@ function removeDuplicateGuesses() {
 
     document.getElementById("guessNumber").textContent = guesses.length;
 
-    saveGame();
+    await saveGame();
   }
 }
+
+function resetInactivityTimer() {
+
+  if (!gameInfoObj) return;
+  
+  clearTimeout(inactivityTimer);
+
+  inactivityTimer = setTimeout(() => {
+
+    window.location.href = "index.html";
+
+  }, TIMEOUT_MS);
+}
+
+[
+  "click",
+  "mousemove",
+  "keydown",
+  "scroll",
+  "touchstart"
+].forEach(event => {
+  document.addEventListener(event, resetInactivityTimer);
+});
