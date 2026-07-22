@@ -14,7 +14,6 @@
 }
 
 
-/* ---------- Global ---------- */
 
 * {
   box-sizing: border-box;
@@ -41,8 +40,6 @@ body {
 }
 
 
-/* ---------- Container ---------- */
-
 .container {
 
   width:100%;
@@ -54,9 +51,6 @@ body {
 
   position:relative;
 }
-
-
-/* ---------- Top Bar ---------- */
 
 .top-bar {
 
@@ -91,9 +85,6 @@ body {
 
   font-weight:bold;
 }
-
-
-/* ---------- Icons ---------- */
 
 .icon-btn {
 
@@ -130,8 +121,6 @@ body {
   color:#555;
 }
 
-
-/* ---------- Inputs ---------- */
 
 .top-input {
 
@@ -186,8 +175,6 @@ input:focus {
 }
 
 
-/* ---------- Text ---------- */
-
 
 .guess-counter {
 
@@ -227,7 +214,6 @@ input:focus {
 }
 
 
-/* ---------- Dropdown ---------- */
 
 .dropdown {
 
@@ -299,8 +285,6 @@ input:focus {
 }
 
 
-/* ---------- Board ---------- */
-
 
 .board {
 
@@ -353,7 +337,6 @@ input:focus {
 }
 
 
-/* ---------- Board Columns ---------- */
 
 
 .rank {
@@ -380,8 +363,6 @@ input:focus {
 }
 
 
-/* ---------- Rank Colors ---------- */
-
 
 .top5 {
   background:#d4edda;
@@ -406,11 +387,6 @@ input:focus {
 .other {
   background:#c6c7c9;
 }
-
-
-/* =====================================================
-   Buttons
-===================================================== */
 
 
 button {
@@ -447,9 +423,6 @@ button:focus-visible {
 
   outline:3px solid #80bdff;
 }
-
-
-/* ---------- Popup ---------- */
 
 
 .popup {
@@ -510,8 +483,6 @@ button:focus-visible {
   padding:8px 20px;
 }
 
-
-/* ---------- Score / Results ---------- */
 
 
 .score-stats {
@@ -576,8 +547,6 @@ button:focus-visible {
 }
 
 
-/* ---------- Result Card ---------- */
-
 
 .result-card {
 
@@ -635,11 +604,6 @@ button:focus-visible {
 
   min-height:40px;
 }
-
-
-/* =====================================================
-   Menu
-===================================================== */
 
 
 .menu-wrapper {
@@ -713,10 +677,6 @@ button:focus-visible {
   display:none;
 }
 
-
-/* =====================================================
-   Last 5 Games
-===================================================== */
 
 
 .last5games {
@@ -851,10 +811,6 @@ button:focus-visible {
 }
 
 
-/* =====================================================
-   Leaderboard
-===================================================== */
-
 
 .leaderboard {
 
@@ -913,8 +869,6 @@ button:focus-visible {
 }
 
 
-/* Header */
-
 
 .leaderboard-header,
 .stat-header,
@@ -948,8 +902,6 @@ button:focus-visible {
 }
 
 
-/* Align columns */
-
 .leaderboard-header span:nth-child(1),
 .leaderboard-row span:nth-child(1) {
 
@@ -973,8 +925,6 @@ button:focus-visible {
 }
 
 
-/* Stat header fix */
-
 .stat-header .stat-label,
 #leaderboardStatHeader .stat-label {
 
@@ -988,7 +938,6 @@ button:focus-visible {
 
 }
 
-/* Leaderboard popup */
 
 .leaderboard-popup h2 {
 
@@ -1022,9 +971,6 @@ button:focus-visible {
 }
 
 
-/* ---------- Leaderboard Button ---------- */
-
-
 .leaderboard-btn {
 
   width:160px;
@@ -1038,10 +984,6 @@ button:focus-visible {
   display:block;
 }
 
-
-/* =====================================================
-   Game Info
-===================================================== */
 
 
 .game-date {
@@ -1097,10 +1039,6 @@ button:focus-visible {
   line-height:18px;
 }
 
-
-/* =====================================================
-   Mobile
-===================================================== */
 
 
 @media(max-width:480px) {
@@ -1159,10 +1097,6 @@ button:focus-visible {
     font-size:14px;
 }
 
-/* =====================================================
-   Calendar Popup
-===================================================== */
-
 
 .calendar-header {
 
@@ -1190,8 +1124,6 @@ button:focus-visible {
 }
 
 
-/* Previous / Next month buttons */
-
 #prevMonth,
 #nextMonth {
 
@@ -1216,7 +1148,6 @@ button:focus-visible {
 }
 
 
-/* Calendar grid */
 
 #calendarGrid {
 
@@ -1224,8 +1155,6 @@ button:focus-visible {
 
 }
 
-
-/* Bottom close button */
 
 #closeCalendar {
 
@@ -1262,7 +1191,6 @@ button:focus-visible {
     font-size:18px;
 }
 
-/* Popup leaderboard rows */
 #leaderboardList .row {
     display:flex;
     justify-content:space-between;
@@ -1279,8 +1207,6 @@ button:focus-visible {
     margin: 25px auto;
     text-align: center;
 }
-
-/* ---------- How To Card ---------- */
 
 .how-to-card {
 
