@@ -258,6 +258,8 @@ const STATS = [
   { stat: "baseOnBalls", title: "Walks", group: "hitting", includeTeamSeason: false },
   { stat: "rbi", title: "RBI", group: "hitting", includeTeamSeason: false },
   { stat: "stolenBases", title: "Stolen Bases", group: "hitting", includeTeamSeason: false },
+  { stat: "gamesPlayed", title: "Games Played", group: "hitting", includeTeamSeason: false },
+  { stat: "extraBaseHits", title: "Extra-Base Hits", group: "hitting", includeTeamSeason: false },
 
   { stat: "wins", title: "Wins", group: "pitching", includeTeamSeason: false },
   { stat: "strikeOuts", title: "Strikeouts", group: "pitching", includeTeamSeason: false },
@@ -1386,7 +1388,8 @@ function renderStatHeader() {
     wins: "W",
     strikeOuts: "SO",
     saves: "SV",
-    gamesPlayed: "G"
+    gamesPlayed: "G",
+    extraBaseHits: "XBH"
   };
 
   // Hide header until at least one guess exists
