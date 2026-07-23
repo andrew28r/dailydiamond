@@ -1335,13 +1335,12 @@ function loadHintStage() {
 
     GAME = gameInfoObj;
 
-    await loadPlayerGame();
 
+    await Promise.all([
+        loadPlayerGame(),
+        loadLeaderboard()
+    ]);
 
-    console.time("leaderboard");
-    await loadLeaderboard();  
-
-    console.timeEnd("leaderboard");
 
     checkUnfinishedRating();
 
