@@ -114,7 +114,19 @@ async function fetchLeaderboard(gameInfoObj){
   console.log(url);
 
 
-  const res = await fetch(url);
+  const controller = new AbortController();
+
+  const timeout = setTimeout(() => {
+      controller.abort();
+  }, 5000);
+
+
+  const res = await fetch(url, {
+      signal: controller.signal
+  });
+
+
+  clearTimeout(timeout);
 
 
   if(!res.ok){

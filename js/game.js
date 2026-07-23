@@ -22,9 +22,9 @@ const TIMEOUT_MS = TIMEOUT_MINUTES * 60 * 1000;
 
 
 const today = getEasternDateString();
-if (selectedDate > today) {
+/*if (selectedDate > today) {
     window.location.href = "index.html";
-}
+}*/
 
 
 async function loadPlayerGame() {
@@ -1337,9 +1337,13 @@ function loadHintStage() {
 
     await loadPlayerGame();
 
-    await checkUnfinishedRating();
 
+    console.time("leaderboard");
     await loadLeaderboard();  
+
+    console.timeEnd("leaderboard");
+
+    checkUnfinishedRating();
 
     loadHintStage();
     updateHowTo();
