@@ -1659,7 +1659,7 @@ function calculateRatingChange(game) {
 
 
     // COMPLETION MODIFIER
-    let completionModifier = 0.75;
+    let completionModifier = 0.95;
 
     if(
         game.win === "true" &&
