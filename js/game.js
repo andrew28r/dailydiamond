@@ -80,7 +80,8 @@ window.addPlayerGame = async function (
   completedSameDay = "",
   hintClicks = "0",
   hintStage = 0,
-  hintPlayer = null
+  hintPlayer = null,
+  ratingChange = null
 ) {
   const playerId = getPlayerId();
   if (!playerId) return null;
@@ -97,7 +98,8 @@ window.addPlayerGame = async function (
         completedSameDay,
         hintClicks,
         hintStage,
-        hintPlayer
+        hintPlayer,
+        ratingChange
     }, {
         onConflict: "playerId,date"
     })
@@ -122,7 +124,8 @@ window.updatePlayerGame = async function (
   completedSameDay,
   hintClicks,
   hintStage,
-  hintPlayer
+  hintPlayer,
+  ratingChange = null
 ) {
   const playerId = getPlayerId();
   if (!playerId) return null;
@@ -137,7 +140,8 @@ window.updatePlayerGame = async function (
       completedSameDay,
       hintClicks,
       hintStage,
-      hintPlayer
+      hintPlayer,
+      ratingChange
     })
     .eq("playerId", playerId)
     .eq("date", date)
@@ -360,17 +364,22 @@ async function saveGame() {
     guessesNumber: String(guesses.length),
     win: String(statusGameWin),
     completed: String(statusGameCompleted),
+
     completedSameDay:
       statusGameCompleted === "true" &&
       selectedDate === getEasternDateString()
         ? "true"
         : "false",
+
     hintClicks: String(totalHintClicks),
-
     hintStage: hintClickCount,
+    hintPlayer: hintedPlayer,
 
-    hintPlayer: hintedPlayer
+    // KEEP EXISTING RATING CHANGE
+    ratingChange:
+      playerGame?.ratingChange ?? null
   };
+
 
   playerGame = await addPlayerGame(
     selectedDate,
@@ -381,10 +390,13 @@ async function saveGame() {
     gameData.completedSameDay,
     gameData.hintClicks,
     gameData.hintStage,
-    gameData.hintPlayer
+    gameData.hintPlayer,
+    gameData.ratingChange
   );
 
+
   await updateGamesPlayed(getPlayerId());
+
   console.log("Game Saved.");
 }
 
@@ -609,7 +621,7 @@ async function checkWin() {
   clearHintData();
 
   await saveGame();
-
+  await processCompletedRating();
 
   stopAutoSave();
 
@@ -698,7 +710,7 @@ async function openGiveUpPopup() {
   clearHintData();
 
   await saveGame(); // <-- ADD THIS
-
+  await processCompletedRating();
   
   stopAutoSave();
   applyLockUI();
@@ -1325,8 +1337,9 @@ function loadHintStage() {
 
     await loadPlayerGame();
 
-    await loadLeaderboard();  // <-- PUT IT RIGHT AFTER THIS
+    await checkUnfinishedRating();
 
+    await loadLeaderboard();  
 
     loadHintStage();
     updateHowTo();
@@ -1507,4 +1520,356 @@ function getDailyGameRules(dateString) {
         teamOnly: null
       };
   }
+}
+
+
+async function checkUnfinishedRating(){
+
+    if(
+        statusGameCompleted === "false" &&
+        guesses.length > 0 &&
+        (!playerGame?.ratingChange)
+    ){
+
+        console.log("Applying unfinished game penalty");
+
+        await applyRatingChange(
+            selectedDate,
+            -25
+        );
+
+    }
+
+}
+
+async function applyRatingChange(date, amount){
+
+    const playerId = getPlayerId();
+
+    if (!playerId) return;
+
+
+    const {data:user, error} = await db
+      .from("playerData")
+      .select("rating")
+      .eq("playerId", playerId)
+      .single();
+
+
+    if(error){
+        console.error(error);
+        return;
+    }
+
+
+    const currentRating =
+        Number(user.rating || 1000);
+
+
+    const newRating =
+        currentRating + amount;
+
+
+    await db
+      .from("playerData")
+      .update({
+          rating:newRating
+      })
+      .eq("playerId",playerId);
+
+
+
+    await db
+      .from("playerGames")
+      .update({
+          ratingChange:amount
+      })
+      .eq("playerId",playerId)
+      .eq("date",date);
+
+
+
+    // update memory
+    if(playerGame){
+        playerGame.ratingChange = amount;
+    }
+
+
+    console.log(
+        `Rating ${currentRating} → ${newRating} (${amount})`
+    );
+
+}
+
+function calculateRatingChange(game) {
+
+    let baseScore;
+
+
+    // RESULT
+    if (game.win === "true") {
+        baseScore = 100;
+    } 
+    else {
+        baseScore = -50;
+    }
+
+
+    // GUESS MODIFIER
+    const guesses = Number(game.guessesNumber);
+
+    let guessModifier = 1;
+
+    if (guesses <= 5)
+        guessModifier = 1.50;
+    else if (guesses === 6)
+        guessModifier = 1.35;
+    else if (guesses === 7)
+        guessModifier = 1.20;
+    else if (guesses === 8)
+        guessModifier = 1.10;
+    else if (guesses <= 10)
+        guessModifier = 0.90;
+    else if (guesses <= 20)
+        guessModifier = 0.75;
+    else if (guesses <= 50)
+        guessModifier = 0.50;
+    else
+        guessModifier = 0.10;
+
+
+
+    // HINT MODIFIER
+    const hints = Number(game.hintClicks);
+
+    let hintModifier = 1;
+
+    if (hints === 0)
+    hintModifier = 1.25;
+
+    else if (hints === 1)
+        hintModifier = 1.10;
+
+    else if (hints >= 5)
+        hintModifier = 0.70;
+
+
+
+    // COMPLETION MODIFIER
+    let completionModifier = 0.75;
+
+    if(
+        game.win === "true" &&
+        game.completedSameDay === "true"
+    ){
+        completionModifier = 1;
+    }
+
+
+    return Math.round(
+        baseScore *
+        guessModifier *
+        hintModifier *
+        completionModifier
+    );
+
+}
+
+async function processCompletedRating(){
+
+    let finalChange = 0;
+
+    const playerId = getPlayerId();
+
+    // Get the actual saved rating change
+    const { data: gameData, error } = await db
+        .from("playerGames")
+        .select("ratingChange")
+        .eq("playerId", playerId)
+        .eq("date", selectedDate)
+        .single();
+
+
+    if(error){
+        console.error(error);
+    }
+
+
+    // Restore unfinished penalty
+    if(Number(gameData?.ratingChange) === -25){
+
+        console.log("Restoring unfinished penalty +25");
+
+        finalChange += 25;
+    }
+
+
+    const gameChange = calculateRatingChange({
+        win: statusGameWin,
+        guessesNumber: guesses.length,
+        hintClicks: totalHintClicks,
+        completedSameDay:
+            selectedDate === getEasternDateString()
+            ? "true"
+            : "false"
+    });
+
+
+    console.log("Game rating:", gameChange);
+
+
+    finalChange += gameChange;
+
+
+    console.log("Final rating change:", finalChange);
+
+
+    await applyRatingChange(
+        selectedDate,
+        finalChange
+    );
+
+}
+
+
+
+async function rebuildAllPlayerGameRatings() {
+
+    const { data: players, error: playerError } = await db
+        .from("playerData")
+        .select("playerId");
+
+
+    if (playerError) {
+        console.error(playerError);
+        return;
+    }
+
+
+    for (const player of players) {
+
+        const playerId = player.playerId;
+
+
+        const { data: games, error: gameError } = await db
+            .from("playerGames")
+            .select("*")
+            .eq("playerId", playerId)
+            .order("date", { ascending: true });
+
+
+        if (gameError) {
+            console.error(gameError);
+            continue;
+        }
+
+
+        let rating = 1000;
+
+
+        for (const game of games) {
+
+            let ratingChange = null;
+
+
+            const completed =
+                game.completed === true ||
+                game.completed === "true";
+
+
+            const guesses =
+                Number(game.guessesNumber || 0);
+
+
+            // COMPLETED GAME
+            if (completed) {
+
+                ratingChange = calculateRatingChange({
+
+                    win: String(game.win),
+
+                    guessesNumber: guesses,
+
+                    hintClicks:
+                        Number(game.hintClicks || 0),
+
+                    completedSameDay:
+                        String(game.completedSameDay)
+
+                });
+
+            }
+
+
+            // STARTED BUT NOT FINISHED
+            else if (guesses > 0) {
+
+                ratingChange = -25;
+
+            }
+
+
+            // Update only games that have a rating value
+            if (ratingChange !== null) {
+
+                const { error: updateError } = await db
+                    .from("playerGames")
+                    .update({
+                        ratingChange: ratingChange
+                    })
+                    .eq("playerId", playerId)
+                    .eq("date", game.date);
+
+
+                if (updateError) {
+
+                    console.error(
+                        "Update failed:",
+                        playerId,
+                        game.date,
+                        updateError
+                    );
+
+                }
+
+
+                rating += ratingChange;
+
+
+                console.log(
+                    playerId,
+                    game.date,
+                    ratingChange,
+                    "rating:",
+                    rating
+                );
+
+            }
+
+        }
+
+
+        // Save final rating
+        const { error: ratingError } = await db
+            .from("playerData")
+            .update({
+                rating: rating
+            })
+            .eq("playerId", playerId);
+
+
+        if (ratingError) {
+            console.error(
+                "Rating update failed:",
+                playerId,
+                ratingError
+            );
+        }
+
+    }
+
+
+    console.log(
+        "Finished rebuilding ratings for all players"
+    );
 }
