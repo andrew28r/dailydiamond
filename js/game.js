@@ -431,7 +431,7 @@ function getEasternDayNumberFromDate(dateString) {
 async function loadLeaderboard(){
 
   leaderboard =
-    await fetchLeaderboard(gameInfoObj);
+    await getCachedLeaderboard(gameInfoObj);
 
 
   gameTitle.textContent =
@@ -1876,4 +1876,91 @@ async function rebuildAllPlayerGameRatings() {
     console.log(
         "Finished rebuilding ratings for all players"
     );
+}
+
+
+async function getCachedLeaderboard(gameInfoObj){
+
+    // CHECK GAMES TABLE FIRST
+    const { data: gameRow, error } = await db
+        .from("games")
+        .select("leaderboard")
+        .eq("date", selectedDate)
+        .maybeSingle();
+
+
+    if(error){
+        console.error(
+            "Game leaderboard lookup error:",
+            error
+        );
+    }
+
+
+    // RETURN CACHED LEADERBOARD
+    if(
+        gameRow &&
+        gameRow.leaderboard &&
+        gameRow.leaderboard.length
+    ){
+
+        console.log(
+            "Loaded leaderboard from games cache"
+        );
+
+        return gameRow.leaderboard;
+
+    }
+
+
+
+    // FETCH MLB API
+    console.log(
+        "Fetching MLB API leaderboard"
+    );
+
+
+    const results = await fetchLeaderboard(gameInfoObj);
+
+
+    console.log(
+        "Leaderboard results:",
+        results
+    );
+
+
+
+    // SAVE LEADERBOARD INTO GAMES TABLE
+    const { error: saveError } = await db
+        .from("games")
+        .upsert(
+            {
+                date: selectedDate,
+                gameinfo: JSON.stringify(gameInfoObj),
+                leaderboard: results
+            },
+            {
+                onConflict: "date"
+            }
+        );
+
+
+    if(saveError){
+
+        console.error(
+            "Leaderboard save failed:",
+            saveError
+        );
+
+    } else {
+
+        console.log(
+            "Leaderboard saved to games table"
+        );
+
+    }
+
+
+    return results;
+
 }
