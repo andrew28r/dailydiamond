@@ -377,7 +377,7 @@ async function saveGame() {
 
     // KEEP EXISTING RATING CHANGE
     ratingChange:
-      playerGame?.ratingChange ?? null
+      playerGame?.ratingChange ?? -25
   };
 
 
@@ -1625,37 +1625,55 @@ function calculateRatingChange(game) {
 
     if (guesses <= 5)
         guessModifier = 1.50;
-    else if (guesses === 6)
-        guessModifier = 1.35;
-    else if (guesses === 7)
-        guessModifier = 1.20;
-    else if (guesses === 8)
-        guessModifier = 1.10;
     else if (guesses <= 10)
-        guessModifier = 0.90;
+        guessModifier = 1.30;
     else if (guesses <= 20)
-        guessModifier = 0.75;
+        guessModifier = 1.15;
     else if (guesses <= 50)
-        guessModifier = 0.50;
+        guessModifier = 1.00;
+    else if (guesses <= 100)
+        guessModifier = 0.90;
+    else if (guesses <= 200)
+        guessModifier = 0.80;
     else
-        guessModifier = 0.10;
-
-
+        guessModifier = 0.70;
 
     // HINT MODIFIER
     const hints = Number(game.hintClicks);
 
-    let hintModifier = 1;
+    //let hintModifier = 1;
 
+    //let hintModifier = Math.max(-1, 2 - (hints * 0.15));
+    /*let hintModifier = Math.max(
+        0.25,
+        1.5 - (hints * 0.1)
+    ); */
+
+        let hintModifier = Math.max(
+        0.25,
+        1.25 - (hints * 0.08)
+    );
+
+
+    /*let hintModifier = Math.max(
+        0.0,
+        2 - (hints * 0.25)
+    );*/
+    
+    /*
     if (hints === 0)
-    hintModifier = 1.25;
-
+        hintModifier = 2.00;
     else if (hints === 1)
-        hintModifier = 1.10;
-
+      hintModifier = 1.60;
+    else if (hints === 2)
+      hintModifier = 1.30;
+    else if (hints === 3)
+      hintModifier = 1.00;
+    else if (hints === 4)
+      hintModifier = 0.80;
     else if (hints >= 5)
-        hintModifier = 0.70;
-
+      hintModifier = 0.50;
+    */
 
 
     // COMPLETION MODIFIER

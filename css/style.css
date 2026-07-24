@@ -1297,3 +1297,98 @@ button:focus-visible {
     font-size: 14px;
     font-weight: 600;
 }
+
+
+.rating-leaderboard {
+
+    width:100%;
+
+    max-width:500px;
+
+    margin:12px auto 0;
+
+    padding:10px 12px;
+
+    border:2px solid #c2c2c2;
+
+    border-radius:8px;
+
+    overflow-x:auto;
+
+}
+
+
+.rating-leaderboard h3 {
+
+    margin:0 0 8px;
+
+    font-size:14px;
+
+    font-weight:600;
+
+}
+
+
+.rating-header,
+.rating-row {
+
+    min-width:430px;
+
+    display:grid;
+
+    grid-template-columns:
+        20px
+        90px
+        55px
+        30px
+        30px
+        30px
+        35px
+        45px
+        45px;
+
+    align-items:center;
+
+    gap:4px;
+
+    text-align:center;
+
+    font-size:12px;
+
+}
+
+.rating-leaderboard h3 {
+
+    margin:0 0 8px;
+
+    text-align:center;
+
+}
+
+.rating-header {
+
+    font-weight:bold;
+
+    color:#777;
+
+    border-bottom:1px solid #ddd;
+
+    padding-bottom:5px;
+
+}
+
+
+.rating-row {
+
+    padding:7px 0;
+
+    border-bottom:1px solid #ddd;
+
+}
+
+
+.rating-row span:nth-child(2) {
+
+    text-align:left;
+
+}
