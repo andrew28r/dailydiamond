@@ -96,12 +96,7 @@ async function updateGamesPlayed(playerId) {
     return;
   }
 
-
-  // Only completed games
-  const completedGames = games.filter(
-    g => g.completed === true ||
-         g.completed === "true"
-  );
+  const completedGames = games;
 
 
   let gamesPlayed = completedGames.length;
@@ -111,51 +106,66 @@ async function updateGamesPlayed(playerId) {
     g => g.win === true ||
          g.win === "true"
   ).length;
-
-
+  
   let streak = 0;
 
-
-  const today = getEasternDateString();
-
-
-  for (const game of completedGames) {
-
-    const isWin =
-      game.win === true ||
-      game.win === "true";
+  let expectedDate = getEasternDateString();
 
 
-    const isSameDay =
-      game.completedSameDay === true ||
-      game.completedSameDay === "true";
+  for (let i = 0; i < 100; i++) {
+
+      const dayGame = games.find(
+          g => g.date === expectedDate
+      );
 
 
-    if (!isSameDay) {
-      break;
-    }
-
-
-    // Today unfinished doesn't exist
-    // Today loss breaks streak
-    if (game.date === today) {
-
-      if (isWin) {
-        streak++;
-        continue;
+      // No game that day
+      if (!dayGame) {
+          break;
       }
 
-      break;
-    }
+
+      const isCompleted =
+          dayGame.completed === true ||
+          dayGame.completed === "true";
 
 
-    if (isWin) {
+      const isWin =
+          dayGame.win === true ||
+          dayGame.win === "true";
+
+
+      const isSameDay =
+          dayGame.completedSameDay === true ||
+          dayGame.completedSameDay === "true";
+
+
+      // unfinished game breaks streak
+      if (!isCompleted) {
+          break;
+      }
+
+
+      // completed late breaks streak
+      if (!isSameDay && expectedDate !== getEasternDateString()) {
+          break;
+      }
+
+
+      // loss breaks streak
+      if (!isWin) {
+          break;
+      }
+
+
       streak++;
-    }
-    else {
-      break;
-    }
 
+
+      const d = new Date(expectedDate + "T00:00:00");
+      d.setDate(d.getDate() - 1);
+
+      expectedDate =
+          d.toISOString().split("T")[0];
   }
 
     await db
