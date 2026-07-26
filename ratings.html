@@ -65,138 +65,195 @@
 </div>
 
 
+
+
+
+
 <div class="how-to-card rating-info" style="display:block;">
 
-  <h3>How Diamond Rating Works</h3>
+<h3>How Diamond Rating Works</h3>
 
-  <p>
-    Every player starts with a <strong>1000 Diamond Rating</strong>.
-    Your rating shows your overall performance in Daily Diamond.
-  </p>
+<p>
+  Every player starts with a <strong>1000 Diamond Rating</strong>.
+  Your rating represents your overall performance in Daily Diamond.
+</p>
 
-  <br>
+<p>
+  Your rating changes after every game based on your result,
+  number of guesses, hints used, completion time, and current rating.
+</p>
 
-  <h3>How Your Rating Changes</h3>
+<br>
 
-  <p>
-    After each game, your Diamond Rating will change based on your result.
-  </p>
+<h3>Rating Formula</h3>
 
-  <p>
-    💎 <strong>Winning</strong> increases your rating.<br>
-    ❌ <strong>Losing or giving up</strong> decreases your rating.<br>
-    ⏳ <strong>Unfinished games</strong> receive a small rating penalty.
-  </p>
+<p>
+  Your rating change is calculated using:
+</p>
 
-  <br>
+<p>
+<strong>
+  Rating Change =
+  (Base Score × Guess Modifier × Hint Modifier × Completion Modifier)
+  × Rating Multiplier
+</strong>
+</p>
 
-  <h3>Rating Formula</h3>
+<br>
 
-  <p>
-    Your rating change is calculated using:
-  </p>
+<h3>Base Score</h3>
 
-  <p>
-    <strong>
-      Rating Change = Base Score × Guess Modifier × Hint Modifier
-    </strong>
-  </p>
+<p>
+  The result of your game determines the starting rating value.
+</p>
 
-  <br>
+<p>
+  💎 Win: +100 Base Score<br>
+  ❌ Give Up / Loss: -50 Base Score<br>
+  ⏳ Unfinished Game: -25 Rating Penalty
+</p>
 
-  <p>
-    <strong>Base Score</strong><br>
-    Determines the starting amount of rating gained or lost based on the result of the game.
-  </p>
+<br>
 
-  <p>
-    A win gives a positive rating change.<br>
-    A loss or give up gives a negative rating change.<br>
-    An unfinished game receives a smaller penalty.
-  </p>
+<h3>Guess Modifier</h3>
 
-  <br>
+<p>
+  Fewer guesses are rewarded with a larger rating increase.
+  The effect decreases gradually as guesses increase.
+</p>
 
-  <p>
-    <strong>Guess Modifier</strong><br>
-    Rewards players who solve games using fewer guesses.
-  </p>
+<p>
+<strong>
+  Guess Modifier =
+  1.50 - (log10(Guesses ÷ 5) × 0.50)
+</strong>
+</p>
 
-  <p>
-    Fewer guesses = bigger rating increase.<br>
-    More guesses = smaller rating increase.
-  </p>
+<p>
+  The minimum Guess Modifier is <strong>0.70x</strong>.
+</p>
 
-  <br>
+<p>
+  Examples:<br>
+  5 guesses: 1.50x<br>
+  20 guesses: ~1.20x<br>
+  50 guesses: ~1.00x<br>
+  100 guesses: ~0.85x<br>
+  200+ guesses: 0.70x
+</p>
 
-  <p>
-    <strong>Hint Modifier</strong><br>
-    Adjusts your rating based on how many hints you use.
-  </p>
+<br>
 
-  <p>
-    Using fewer hints increases your reward.<br>
-    Using more hints reduces your rating gain.
-  </p>
+<h3>Hint Modifier</h3>
 
-  <br>
+<p>
+  Using fewer hints gives a larger rating reward.
+  Hints have diminishing impact, meaning early hints matter more than additional hints later.
+</p>
 
-  <h3>Ranking</h3>
+<p>
+<strong>
+  Hint Modifier =
+  1.25 - (log10(Hints + 1) × 0.50)
+</strong>
+</p>
 
-  <p>
-    Players are ranked by their current Diamond Rating.
-  </p>
+<p>
+  The minimum Hint Modifier is <strong>0.50x</strong>.
+</p>
 
-  <p>
-    A player with a higher rating ranks above players with a lower rating.
-  </p>
+<p>
+  Examples:<br>
+  0 hints: 1.25x<br>
+  1 hint: ~1.10x<br>
+  5 hints: ~0.86x<br>
+  10 hints: ~0.73x<br>
+  20+ hints: 0.50x
+</p>
 
-  <p>
-    Example:
-  </p>
+<br>
 
-  <p>
-    #1 Player - 1500 Rating<br>
-    #2 Player - 1250 Rating<br>
-    #3 Player - 1100 Rating
-  </p>
+<h3>Completion Modifier</h3>
 
-  <br>
+<p>
+  Completing a game on the same day gives a small bonus.
+</p>
 
-  <h3>Playing More Games</h3>
+<p>
+  Same-day completion: 1.00x<br>
+  Completed later: 0.95x
+</p>
 
-  <p>
-    Playing more games does not automatically increase your Diamond Rating.
-  </p>
+<br>
 
-  <p>
-    Every completed game affects your rating, so consistent performance over time is what matters.
-  </p>
+<h3>Rating Multiplier</h3>
 
-  <p>
-    A player who wins many games efficiently will continue to increase their rating, while a player who loses or uses many hints may see their rating decrease.
-  </p>
+<p>
+  Your current rating affects how quickly your rating changes.
+</p>
 
-  <br>
+<p>
+  Higher-rated players gain rating more slowly,
+  while lower-rated players can climb faster.
+</p>
 
-  <h3>Rating Progression</h3>
+<p>
+  This keeps the leaderboard competitive and prevents ratings from increasing too quickly.
+</p>
 
-  <p>
-    As your rating increases, climbing higher becomes more difficult because you must continue performing well to maintain your rank.
-  </p>
+<br>
 
-  <p>
-    Your Diamond Rating represents your long-term performance, not just your best single game.
-  </p>
+<h3>Rating Progression</h3>
 
-  
-  <br>
+<p>
+  Your Diamond Rating is updated after every completed game by adding or subtracting your rating change.
+</p>
 
-  <p>
-    The goal is to build the highest Diamond Rating by consistently winning games and solving them efficiently.
-  </p>
+<p>
+  Example:
+</p>
+
+<p>
+  Starting Rating: 1000<br>
+  Game Rating Change: +65<br>
+  New Rating: 1065
+</p>
+
+<p>
+  Playing more games does not automatically increase your rating.
+  Every game is another opportunity to gain or lose rating.
+</p>
+
+<br>
+
+<h3>Ranking</h3>
+
+<p>
+  Players are ranked by their current Diamond Rating.
+</p>
+
+<p>
+  The highest rating appears at the top of the leaderboard.
+</p>
+
+<p>
+  A player with a 1500 rating ranks above a player with a 1200 rating.
+</p>
+
+<br>
+
+<p>
+  The goal is to build the highest Diamond Rating by consistently winning games,
+  solving puzzles efficiently, and minimizing hints.
+</p>
 
 </div>
+
+
+
+
+
+
 
 
 <!-- Google Ad -->

@@ -1619,6 +1619,56 @@ function calculateRatingChange(game) {
 
 
     // GUESS MODIFIER
+
+
+    // GUESS MODIFIER
+    // GUESS MODIFIER
+   /* const guesses = Number(game.guessesNumber);
+
+    let guessModifier;
+
+    if (guesses <= 5) {
+        guessModifier = 1.50;
+    } else {
+        guessModifier = 1.50 - ((guesses - 5) * 0.01);
+    }
+
+    guessModifier = Math.max(
+        0.20,
+        guessModifier
+    );*/
+
+    const guesses = Number(game.guessesNumber);
+
+    let guessModifier =
+        1.5 - (Math.log10(guesses / 5) * 0.5);
+
+    guessModifier = Math.max(
+        0.70,
+        guessModifier
+    );
+
+
+
+
+/*
+    const guesses = Number(game.guessesNumber);
+
+    let guessModifier = 1.50;
+
+    if (guesses > 5) {
+
+        guessModifier =
+            1.50 - ((guesses - 5) * 0.005);
+
+    }
+
+    guessModifier = Math.max(
+        0.70,
+        Math.min(1.50, guessModifier)
+    );
+*/
+    /*
     const guesses = Number(game.guessesNumber);
 
     let guessModifier = 1;
@@ -1637,7 +1687,8 @@ function calculateRatingChange(game) {
         guessModifier = 0.80;
     else
         guessModifier = 0.70;
-
+    */
+   
     // HINT MODIFIER
     const hints = Number(game.hintClicks);
 
@@ -1648,12 +1699,20 @@ function calculateRatingChange(game) {
         0.25,
         1.5 - (hints * 0.1)
     ); */
-
+/*
         let hintModifier = Math.max(
         0.25,
         1.25 - (hints * 0.08)
     );
+*/
 
+    let hintModifier =
+        1.25 - (Math.log10(hints + 1) * 0.5);
+
+    hintModifier = Math.max(
+        0.50,
+        hintModifier
+    );
 
     /*let hintModifier = Math.max(
         0.0,
