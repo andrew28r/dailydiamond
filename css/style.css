@@ -1346,7 +1346,9 @@ button:focus-visible {
         30px
         35px
         45px
-        45px;
+        45px
+        45px
+        55px;
 
     align-items:center;
 
@@ -1356,6 +1358,10 @@ button:focus-visible {
 
     font-size:12px;
 
+}
+
+.player-name {
+    text-align: left;
 }
 
 .rating-leaderboard h3 {

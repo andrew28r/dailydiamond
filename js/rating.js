@@ -46,7 +46,7 @@ async function loadRatingLeaderboard() {
         // Load player games
         const { data: games, error: gameError } = await db
             .from("playerGames")
-            .select("guessesNumber, hintClicks, win, completed")
+            .select("guessesNumber, hintClicks, win, completed, ratingChange")
             .eq("playerId", player.playerId);
 
 
@@ -96,7 +96,27 @@ async function loadRatingLeaderboard() {
         const avgHints = gamesPlayed
             ? (Number(totalHints) / gamesPlayed).toFixed(1)
             : "0.0";
+                    
+        const ratedGames = games.filter(g =>
+            g.ratingChange !== null &&
+            g.ratingChange !== undefined
+        );
 
+        const totalPoints = games.reduce((sum, game) => {
+            return sum + Number(game.ratingChange || 0);
+        }, 0);
+
+        const avgPoints = games.length
+            ? (totalPoints / games.length).toFixed(1)
+            : "0.0";
+
+
+        const bestGameChange = ratedGames.length
+            ? Math.max(
+                ...ratedGames.map(g => Number(g.ratingChange || 0))
+            )
+            : 0;
+            
         const row = document.createElement("div");
 
         row.className = "rating-row";
@@ -112,6 +132,9 @@ async function loadRatingLeaderboard() {
             <span>${notFinished}</span>
             <span>${avgGuesses}</span>
             <span>${avgHints}</span>
+            <span>${avgPoints}</span>
+            <span>${bestGameChange > 0 ? "+" + bestGameChange : bestGameChange}</span>
+            
         `;
 
 
