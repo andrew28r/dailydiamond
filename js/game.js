@@ -1994,7 +1994,7 @@ async function getCachedLeaderboard(gameInfoObj){
 function getRatingMultiplier(rating){
 
     return Math.max(
-        0.1,
+        0.5,
         1.25 - ((rating - 1000) / 5000)
     );
 
