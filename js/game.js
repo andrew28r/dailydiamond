@@ -1738,9 +1738,19 @@ async function processCompletedRating(){
 
     console.log("Game rating:", gameChange);
 
+    const { data: playerData } = await db
+        .from("playerData")
+        .select("rating")
+        .eq("playerId", playerId)
+        .single();
 
-    finalChange += gameChange;
+    const currentRating = Number(playerData?.rating || 1000);
 
+    const ratingMultiplier = getRatingMultiplier(currentRating);
+
+    finalChange += Math.round(
+        gameChange * ratingMultiplier
+    );
 
     console.log("Final rating change:", finalChange);
 
@@ -1979,5 +1989,14 @@ async function getCachedLeaderboard(gameInfoObj){
 
 
     return results;
+
+}
+
+function getRatingMultiplier(rating){
+
+    return Math.max(
+        0.1,
+        1.25 - ((rating - 1000) / 5000)
+    );
 
 }
