@@ -1392,3 +1392,22 @@ button:focus-visible {
     text-align:left;
 
 }
+
+.rating-info {
+  margin-top: 20px;
+  text-align: left;
+}
+
+.rating-info h2 {
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+.rating-info p {
+  margin: 8px 0;
+}
+
+.rating-info ul {
+  margin: 10px 0;
+  padding-left: 25px;
+}
