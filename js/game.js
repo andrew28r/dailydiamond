@@ -2050,11 +2050,25 @@ async function getCachedLeaderboard(gameInfoObj){
 
 }
 
+/*
 function getRatingMultiplier(rating){
 
     return Math.max(
         0.5,
         1.25 - ((rating - 1000) / 5000)
     );
+
+}*/
+
+function getRatingMultiplier(rating){
+
+    const difference = rating - 1000;
+
+    return Math.max(
+        0.05,
+        1.25 - (Math.sqrt(Math.max(0, difference)) / 100)
+    );
+
+    
 
 }

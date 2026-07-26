@@ -68,7 +68,6 @@
 
 
 
-
 <div class="how-to-card rating-info" style="display:block;">
 
 <h3>How Diamond Rating Works</h3>
@@ -80,7 +79,7 @@
 
 <p>
   Your rating changes after every game based on your result,
-  number of guesses, hints used, completion time, and current rating.
+  number of guesses, hints used, completion timing, and your current rating.
 </p>
 
 <br>
@@ -99,12 +98,16 @@
 </strong>
 </p>
 
+<p>
+  The final rating change is added to your current Diamond Rating.
+</p>
+
 <br>
 
 <h3>Base Score</h3>
 
 <p>
-  The result of your game determines the starting rating value.
+  Your game result determines the starting value.
 </p>
 
 <p>
@@ -113,13 +116,18 @@
   ⏳ Unfinished Game: -25 Rating Penalty
 </p>
 
+<p>
+  If an unfinished game is later completed, the unfinished penalty is removed
+  and replaced by the final game result.
+</p>
+
 <br>
 
 <h3>Guess Modifier</h3>
 
 <p>
   Fewer guesses are rewarded with a larger rating increase.
-  The effect decreases gradually as guesses increase.
+  The effect decreases gradually as the number of guesses increases.
 </p>
 
 <p>
@@ -130,7 +138,7 @@
 </p>
 
 <p>
-  The minimum Guess Modifier is <strong>0.70x</strong>.
+  Minimum Guess Modifier: <strong>0.70x</strong>
 </p>
 
 <p>
@@ -148,7 +156,7 @@
 
 <p>
   Using fewer hints gives a larger rating reward.
-  Hints have diminishing impact, meaning early hints matter more than additional hints later.
+  Hints have diminishing impact, meaning the first few hints matter more than additional hints later.
 </p>
 
 <p>
@@ -159,7 +167,7 @@
 </p>
 
 <p>
-  The minimum Hint Modifier is <strong>0.50x</strong>.
+  Minimum Hint Modifier: <strong>0.50x</strong>
 </p>
 
 <p>
@@ -185,20 +193,27 @@
 </p>
 
 <br>
-
 <h3>Rating Multiplier</h3>
 
 <p>
-  Your current rating affects how quickly your rating changes.
+  Your current Diamond Rating affects how much your rating changes after each game.
 </p>
 
 <p>
-  Higher-rated players gain rating more slowly,
-  while lower-rated players can climb faster.
+  Lower-rated players can gain rating faster, while higher-rated players gain rating more slowly.
+  This helps new players catch up while making it harder for top-rated players to keep increasing forever.
 </p>
 
 <p>
-  This keeps the leaderboard competitive and prevents ratings from increasing too quickly.
+<strong>
+Rating Multiplier =
+1.25 - (√(Current Rating - 1000) ÷ 100)
+</strong>
+</p>
+
+<p>
+  The square root creates a gradual slowdown as ratings increase.
+  Higher ratings require more consistent strong performances to continue climbing.
 </p>
 
 <br>
@@ -206,7 +221,7 @@
 <h3>Rating Progression</h3>
 
 <p>
-  Your Diamond Rating is updated after every completed game by adding or subtracting your rating change.
+  Your Diamond Rating is updated after every completed game by adding or subtracting your final rating change.
 </p>
 
 <p>
@@ -248,7 +263,6 @@
 </p>
 
 </div>
-
 
 
 
