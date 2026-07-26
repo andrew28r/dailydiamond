@@ -1763,7 +1763,6 @@ async function processCompletedRating(){
 }
 
 
-
 async function rebuildAllPlayerGameRatings() {
 
     const { data: players, error: playerError } = await db
