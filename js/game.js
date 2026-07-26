@@ -1540,10 +1540,8 @@ async function preloadFutureGames() {
     preloadFutureGames();
 
 
-    await Promise.all([
-        loadPlayerGame(),
-        loadLeaderboard()
-    ]);
+    await loadPlayerGame();
+    await loadLeaderboard();
 
 
     checkUnfinishedRating();
