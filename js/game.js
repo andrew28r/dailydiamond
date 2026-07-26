@@ -1283,7 +1283,209 @@ function loadHintStage() {
     }
 }
 
+/* =========================
+   FUTURE GAME PRELOADER
+========================= */
 
+async function preloadFutureGames() {
+
+    console.log("Starting future game preload...");
+
+    const datesToCheck = [];
+
+    for (let i = 1; i <= 3; i++) {
+
+        const future = new Date();
+
+        future.setDate(
+            future.getDate() + i
+        );
+
+
+        const dateString =
+            future.toLocaleDateString(
+                "en-CA",
+                {
+                    timeZone: "America/New_York"
+                }
+            );
+
+
+        datesToCheck.push(dateString);
+    }
+
+
+
+    for (const dateString of datesToCheck) {
+
+        try {
+
+            console.log(
+                "Checking future date:",
+                dateString
+            );
+
+
+            // Check if game already exists
+            const { data: existingGame, error } = await db
+                .from("games")
+                .select("date, leaderboard")
+                .eq("date", dateString)
+                .maybeSingle();
+
+
+
+            if(error){
+                console.error(
+                    "Future game check failed:",
+                    error
+                );
+
+                continue;
+            }
+
+
+
+            // Game already exists
+            if(existingGame){
+
+                console.log(
+                    "Already exists:",
+                    dateString
+                );
+
+
+                // Optional:
+                // If game exists but leaderboard does not,
+                // fill it in
+
+                if(
+                    !existingGame.leaderboard ||
+                    existingGame.leaderboard.length === 0
+                ){
+
+                    console.log(
+                        "Leaderboard missing. Creating..."
+                    );
+
+
+                    const { data: gameData } = await db
+                        .from("games")
+                        .select("gameinfo")
+                        .eq("date", dateString)
+                        .single();
+
+
+
+                    const gameInfo =
+                        typeof gameData.gameinfo === "string"
+                        ? JSON.parse(gameData.gameinfo)
+                        : gameData.gameinfo;
+
+
+
+                    const leaderboard =
+                        await fetchLeaderboard(gameInfo);
+
+
+
+                    await db
+                        .from("games")
+                        .update({
+                            leaderboard
+                        })
+                        .eq("date", dateString);
+
+
+                    console.log(
+                        "Leaderboard added:",
+                        dateString
+                    );
+                }
+
+
+                continue;
+            }
+
+
+
+
+            // CREATE NEW GAME
+
+            console.log(
+                "Creating future game:",
+                dateString
+            );
+
+
+
+            const generatedGame =
+                await generateUniqueGame(dateString);
+
+
+
+            console.log(
+                "Fetching leaderboard:",
+                dateString
+            );
+
+
+            const leaderboard =
+                await fetchLeaderboard(generatedGame);
+
+
+
+            const { error: insertError } = await db
+                .from("games")
+                .insert({
+
+                    date: dateString,
+
+                    gameinfo: generatedGame,
+
+                    leaderboard: leaderboard
+
+                });
+
+
+
+            if(insertError){
+
+                console.error(
+                    "Future game save failed:",
+                    insertError
+                );
+
+            }
+            else {
+
+                console.log(
+                    "Future game created:",
+                    dateString
+                );
+
+            }
+
+
+        }
+        catch(err){
+
+            console.error(
+                "Future preload error:",
+                dateString,
+                err
+            );
+
+        }
+
+    }
+
+
+    console.log(
+        "Future preload finished."
+    );
+
+}
 
 
 /* =========================
@@ -1334,6 +1536,8 @@ function loadHintStage() {
     }
 
     GAME = gameInfoObj;
+
+    preloadFutureGames();
 
 
     await Promise.all([
