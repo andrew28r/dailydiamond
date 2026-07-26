@@ -220,11 +220,14 @@ async function submitPlayerId() {
     document.getElementById("loginYesBtn").onclick = () => {
       localStorage.setItem("playerId", username);
 
+      updateMenuPlayerId();
+
       document.getElementById("loginConfirmPopup").style.display = "none";
       document.getElementById("playerIdPopup").style.display = "none";
 
       loadDayButtons();
       loadPlayerStreak();
+      
     };
 
 
@@ -241,6 +244,8 @@ async function submitPlayerId() {
   await createPlayer(username);
 
   localStorage.setItem("playerId", username);
+
+  updateMenuPlayerId();
 
   document.getElementById("playerIdPopup").style.display = "none";
 
@@ -664,10 +669,14 @@ menu.addEventListener("click", (e) => {
     e.stopPropagation();
 });
 
-document.getElementById("menuPlayerId").textContent =
-    localStorage.getItem("playerId") || "Not Logged In";
+updateMenuPlayerId();
 
 document.getElementById("changeUserBtn").addEventListener("click", () => {
     menu.classList.add("hidden");
     openPopup(); // or whatever function currently opens playerIdPopup
 });
+
+function updateMenuPlayerId() {
+    document.getElementById("menuPlayerId").textContent =
+        localStorage.getItem("playerId") || "Not Logged In";
+}
