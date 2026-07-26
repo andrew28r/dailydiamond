@@ -861,7 +861,7 @@ button:focus-visible {
 
   display:grid;
 
-  grid-template-columns:40px 1fr 45px;
+  grid-template-columns:40px 1fr 65px 45px;
 
   align-items:center;
 
@@ -869,12 +869,11 @@ button:focus-visible {
 }
 
 
-
 .leaderboard-header,
 .stat-header,
 #leaderboardStatHeader {
 
-  padding:0 10px 4px;
+  padding:6px 4px 4px;
 
   margin-bottom:4px;
 
@@ -917,7 +916,9 @@ button:focus-visible {
 
 
 .leaderboard-header span:nth-child(3),
-.leaderboard-row span:nth-child(3) {
+.leaderboard-row span:nth-child(3),
+.leaderboard-header span:nth-child(4),
+.leaderboard-row span:nth-child(4) {
 
   text-align:center;
 
@@ -1410,4 +1411,17 @@ button:focus-visible {
 .rating-info ul {
   margin: 10px 0;
   padding-left: 25px;
+}
+
+.leaderboard-header a {
+  color: inherit;
+  text-decoration: underline;
+  padding: 2px 5px;
+  border-radius: 4px;
+  transition: background 0.2s ease;
+}
+
+.leaderboard-header a:hover {
+  background: #e0e0e0;
+  text-decoration: underline;
 }

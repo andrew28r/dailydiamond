@@ -47,7 +47,8 @@ async function createPlayer(playerId) {
         playerId: playerId,
         gamesPlayed: 0,
         wins: 0,
-        streak: 0
+        streak: 0,
+        rating: 1000
       }
     ])
     .select()
@@ -295,21 +296,26 @@ async function loadLeaderboard() {
 
   const { data, error } = await db
     .from("playerData")
-    .select("playerId, wins")
+    .select("playerId, wins, rating")
     .neq("playerId", "andrew28r")
-    .order("wins", { ascending: false })
+    .order("rating", { ascending: false })
     .limit(5);
+
 
   if (error) {
     console.error("Leaderboard error:", error);
+
     document.getElementById("leaderboardList").textContent =
       "Unable to load leaderboard";
+
     return;
   }
+
 
   const leaderboard = document.getElementById("leaderboardList");
 
   leaderboard.innerHTML = "";
+
 
   data.forEach((player, index) => {
 
@@ -317,16 +323,21 @@ async function loadLeaderboard() {
 
     row.className = "leaderboard-row";
 
+
     row.innerHTML = `
       <span>${index + 1}.</span>
       <span>${player.playerId}</span>
+      <span>${player.rating ?? 1000}</span>
       <span>${player.wins}</span>
     `;
+
 
     leaderboard.appendChild(row);
 
   });
+
 }
+
 
 const calendarButton = document.getElementById("calendarButton");
 const calendarPopup = document.getElementById("calendarPopup");
