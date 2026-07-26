@@ -671,6 +671,12 @@ button:focus-visible {
   color:#333;
 }
 
+.menu-player {
+    text-align: center;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #ddd;
+}
+
 
 .hidden {
 

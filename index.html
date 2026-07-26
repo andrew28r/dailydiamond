@@ -23,13 +23,38 @@
 
 <body>
 
+  
 <div class="top-bar">
 
   <div class="title"></div>
   <div class="title"></div>
 
-  <button class="icon-btn" onclick="openPopup()">☰</button>
-</div>
+  <div class="menu-wrapper">
+    <button class="icon-btn" id="menuBtn">☰</button>
+
+    <div id="menu" class="menu hidden">
+
+      <div class="menu-player" id="menuPlayer">
+        Logged in as<br>
+        <strong id="menuPlayerId">Loading...</strong>
+      </div>
+      <div>
+        
+      </div>
+
+      <button class="menu-btn" id="changeUserBtn">
+        Change Username
+      </button>
+
+      <button class="menu-btn" onclick="window.location.href='ratings.html'">
+        Ratings
+      </button>
+
+    </div> <!-- menu -->
+
+  </div> <!-- menu-wrapper -->
+
+</div> <!-- top-bar -->
 
 <div class="container">
   <h2>Daily Diamond</h2>

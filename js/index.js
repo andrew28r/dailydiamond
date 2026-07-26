@@ -647,3 +647,27 @@ window.addEventListener("load", async () => {
   loadPlayerStreak();
   loadLeaderboard();
 });
+
+const menuBtn = document.getElementById("menuBtn");
+const menu = document.getElementById("menu");
+
+menuBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    menu.classList.toggle("hidden");
+});
+
+document.addEventListener("click", () => {
+    menu.classList.add("hidden");
+});
+
+menu.addEventListener("click", (e) => {
+    e.stopPropagation();
+});
+
+document.getElementById("menuPlayerId").textContent =
+    localStorage.getItem("playerId") || "Not Logged In";
+
+document.getElementById("changeUserBtn").addEventListener("click", () => {
+    menu.classList.add("hidden");
+    openPopup(); // or whatever function currently opens playerIdPopup
+});
