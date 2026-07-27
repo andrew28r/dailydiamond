@@ -110,13 +110,13 @@ async function loadRatingLeaderboard() {
             ? (totalPoints / games.length).toFixed(1)
             : "0.0";
 
-
+        /*
         const bestGameChange = ratedGames.length
             ? Math.max(
                 ...ratedGames.map(g => Number(g.ratingChange || 0))
             )
             : 0;
-            
+            */
         const row = document.createElement("div");
 
         row.className = "rating-row";
@@ -133,7 +133,7 @@ async function loadRatingLeaderboard() {
             <span>${avgGuesses}</span>
             <span>${avgHints}</span>
             <span>${avgPoints}</span>
-            <span>${bestGameChange > 0 ? "+" + bestGameChange : bestGameChange}</span>
+            
             
         `;
 

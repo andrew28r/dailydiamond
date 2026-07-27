@@ -1373,7 +1373,7 @@ button:focus-visible {
 
 
 
-    min-width:520px;
+    min-width:470px;
     width:100%;
 
 
@@ -1389,8 +1389,7 @@ button:focus-visible {
         35px
         45px
         45px
-        45px
-        55px;
+        45px;
 
     align-items:center;
 
