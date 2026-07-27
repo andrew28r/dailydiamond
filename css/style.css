@@ -1371,7 +1371,11 @@ button:focus-visible {
 .rating-header,
 .rating-row {
 
-    min-width:430px;
+
+
+    min-width:520px;
+    width:100%;
+
 
     display:grid;
 
