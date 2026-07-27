@@ -258,16 +258,29 @@ const STATS = [
   { stat: "homeRuns", title: "Home Runs", group: "hitting", includeTeamSeason: true },
   { stat: "triples", title: "Triples", group: "hitting", includeTeamSeason: false },
   { stat: "doubles", title: "Doubles", group: "hitting", includeTeamSeason: false },
-  { stat: "hits", title: "Hits", group: "hitting", includeTeamSeason: false },
+  { stat: "hits", title: "Hits", group: "hitting", includeTeamSeason: true },
   { stat: "baseOnBalls", title: "Walks", group: "hitting", includeTeamSeason: false },
   { stat: "rbi", title: "RBI", group: "hitting", includeTeamSeason: false },
   { stat: "stolenBases", title: "Stolen Bases", group: "hitting", includeTeamSeason: false },
   { stat: "gamesPlayed", title: "Games Played", group: "hitting", includeTeamSeason: false },
   { stat: "extraBaseHits", title: "Extra-Base Hits", group: "hitting", includeTeamSeason: false },
+  { stat: "atBats", title: "At Bats", group: "hitting", includeTeamSeason: false },
+  { stat: "runs", title: "Runs", group: "hitting", includeTeamSeason: false },
+  { stat: "plateAppearances", title: "Plate Appearances", group: "hitting", includeTeamSeason: false },
+  { stat: "sacFlies", title: "Sacrifice Flies", group: "hitting", includeTeamSeason: false },
+  { stat: "hitByPitch", title: "Hit By Pitch", group: "hitting", includeTeamSeason: false },
+  { stat: "strikeOuts", title: "Strikeouts", group: "hitting", includeTeamSeason: false },
 
-  { stat: "wins", title: "Wins", group: "pitching", includeTeamSeason: false },
-  { stat: "strikeOuts", title: "Strikeouts", group: "pitching", includeTeamSeason: false },
-  { stat: "saves", title: "Saves", group: "pitching", includeTeamSeason: false }
+  { stat: "wins", title: "Wins", group: "pitching", includeTeamSeason: true },
+  { stat: "strikeOuts", title: "Strikeouts", group: "pitching", includeTeamSeason: true },
+  { stat: "saves", title: "Saves", group: "pitching", includeTeamSeason: false },
+  { stat: "inningsPitched", title: "Innings Pitched", group:"pitching", includeTeamSeason: false  },
+  { stat: "era", title: "ERA", group:"pitching", includeTeamSeason: false  },
+  { stat: "whip", title: "WHIP", group:"pitching", includeTeamSeason: false  },
+  { stat: "gamesStarted", title: "Games Started", group:"pitching", includeTeamSeason: false  },
+  { stat: "completeGames", title: "Complete Games", group:"pitching", includeTeamSeason: false  },
+  { stat: "shutouts", title: "Shutouts", group:"pitching", includeTeamSeason: false  },
+  { stat: "qualityStarts", title: "Quality Starts", group:"pitching", includeTeamSeason: false  }
 ];
 
 const YEARS = [
@@ -781,13 +794,26 @@ function getGameFromSeed(seed, dateString) {
 
   let game = {
     group: stat.group,
-    sortStat: stat.stat
+    sortStat: stat.stat,
+    sortOrder: "desc",
+    titleType: "Most"
   };
+
+
+  if (
+    ["era","whip"].includes(game.sortStat)
+  ) {
+    game.sortOrder = "asc";
+    game.titleType = "Lowest";
+  }
+
 
   if (isTeamGame) {
     game.teamId = team.id;
     game.teamName = team.name;
   }
+
+  const word = game.titleType || "Most";
 
   if (
     rules.type === "career" ||
@@ -795,8 +821,8 @@ function getGameFromSeed(seed, dateString) {
   ) {
     game.stats = "career";
     game.title = isTeamGame
-      ? `Most Career ${stat.title} for ${team.name}`
-      : `Most Career ${stat.title}`;
+      ? `${word} Career ${stat.title} for ${team.name}`
+      : `${word} Career ${stat.title}`;
   } else if (
     rules.type === "season" ||
     (rules.type === "random" && r4 < 0.66)
@@ -807,8 +833,8 @@ function getGameFromSeed(seed, dateString) {
     game.season = year;
 
     game.title = isTeamGame
-      ? `Most ${stat.title} in ${year} for ${team.name}`
-      : `Most ${stat.title} in ${year}`;
+      ? `${word} ${stat.title} in ${year} for ${team.name}`
+      : `${word} ${stat.title} in ${year}`;
   } else {
     const decade = DECADES[Math.floor(r5 * DECADES.length)];
 
@@ -817,8 +843,8 @@ function getGameFromSeed(seed, dateString) {
     game.endDate = `${decade + 9}-12-31`;
 
     game.title = isTeamGame
-      ? `Most ${stat.title} in the ${decade}s for ${team.name}`
-      : `Most ${stat.title} in the ${decade}s`;
+      ? `${word} ${stat.title} in the ${decade}s for ${team.name}`
+      : `${word} ${stat.title} in the ${decade}s`;
   }
 
   return game;
@@ -1596,6 +1622,7 @@ function stopAutoSave() {
 function renderStatHeader() {
 
   const abbreviations = {
+    // Hitting
     homeRuns: "HR",
     triples: "3B",
     doubles: "2B",
@@ -1603,11 +1630,25 @@ function renderStatHeader() {
     baseOnBalls: "BB",
     rbi: "RBI",
     stolenBases: "SB",
-    wins: "W",
-    strikeOuts: "SO",
-    saves: "SV",
     gamesPlayed: "G",
-    extraBaseHits: "XBH"
+    extraBaseHits: "XBH",
+    atBats: "AB",
+    runs: "R",
+    plateAppearances: "PA",
+    sacFlies: "SF",
+    hitByPitch: "HBP",
+    strikeOuts: "SO",
+
+    // Pitching
+    wins: "W",
+    saves: "SV",
+    inningsPitched: "IP",
+    era: "ERA",
+    whip: "WHIP",
+    gamesStarted: "GS",
+    completeGames: "CG",
+    shutouts: "SHO",
+    qualityStarts: "QS"
   };
 
   // Hide header until at least one guess exists

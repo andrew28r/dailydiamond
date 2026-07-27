@@ -84,9 +84,10 @@ async function fetchLeaderboard(gameInfoObj){
     `&group=${gameInfoObj.group}` +
     `&sportId=1` +
     `&sortStat=${gameInfoObj.sortStat}` +
-    `&order=desc` +
+    `&order=${gameInfoObj.sortOrder || "desc"}` +
     `&limit=1000`;
 
+    
 
   if(gameInfoObj.startDate)
     url += `&startDate=${gameInfoObj.startDate}`;
@@ -107,9 +108,15 @@ async function fetchLeaderboard(gameInfoObj){
   if(gameInfoObj.gameType)
     url += `&gameType=${gameInfoObj.gameType}`;
 
+  let pool = "all";
+  
+  if (
+    ["era","whip","avg","obp","slg"].includes(gameInfoObj.sortStat)
+  ) {
+    pool = "QUALIFIED";
+  }
 
-  url += "&playerPool=all";
-
+  url += `&playerPool=${pool}`;
 
   console.log(url);
 
@@ -148,10 +155,8 @@ async function fetchLeaderboard(gameInfoObj){
     rank:i+1,
 
     name:p.player.fullName,
-
-    value:Number(
-      p.stat[gameInfoObj.sortStat] || 0
-    ),
+    
+    value: p.stat[gameInfoObj.sortStat] ?? 0,
 
     team:p.team?.name || "Unknown",
 
