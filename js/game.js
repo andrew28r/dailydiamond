@@ -2064,7 +2064,6 @@ async function processCompletedRating(){
 
 }
 
-
 async function rebuildAllPlayerGameRatings() {
 
     const { data: players, error: playerError } = await db
@@ -2087,128 +2086,151 @@ async function rebuildAllPlayerGameRatings() {
             .from("playerGames")
             .select("*")
             .eq("playerId", playerId)
-            .order("date", { ascending:true });
+            .order("date", { ascending: true });
 
 
-        if(gameError){
+        if (gameError) {
             console.error(gameError);
             continue;
         }
 
 
+        // Starting rating
         let rating = 1000;
 
 
-        for(const game of games){
+
+        for (const game of games) {
 
             let change = null;
 
 
             const completed =
-                game.completed === true ||
-                game.completed === "true";
+                String(game.completed) === "true";
+
+
+            const win =
+                String(game.win) === "true";
+
+
+            const completedSameDay =
+                String(game.completedSameDay) === "true";
 
 
             const guesses =
                 Number(game.guessesNumber || 0);
 
 
+            const hints =
+                Number(game.hintClicks || 0);
+
+
+
             /*
                 COMPLETED GAME
             */
 
-            if(completed){
+            if (completed) {
 
 
-                let baseChange = calculateRatingChange({
+                const baseChange = calculateRatingChange({
 
-                    win:String(game.win),
+                    win: String(win),
 
-                    guessesNumber:guesses,
+                    guessesNumber: guesses,
 
-                    hintClicks:
-                        Number(game.hintClicks || 0),
+                    hintClicks: hints,
 
                     completedSameDay:
-                        String(game.completedSameDay)
+                        String(completedSameDay)
 
                 });
 
 
-                /*
-                    APPLY SAME MULTIPLIER
-                    AS LIVE GAME
-                */
 
                 const multiplier =
                     getRatingMultiplier(rating);
 
 
-                change =
-                    Math.round(
-                        baseChange * multiplier
-                    );
+
+                change = Math.round(
+                    baseChange * multiplier
+                );
 
 
             }
+
 
 
             /*
                 STARTED BUT NEVER FINISHED
             */
 
-            else if(guesses > 0){
+            else if (guesses > 0) {
 
                 change = -25;
 
             }
 
 
+
             /*
-                NOTHING PLAYED
+                APPLY CHANGE
             */
 
-            if(change !== null){
+            if (change !== null) {
 
 
-                await db
-                .from("playerGames")
-                .update({
-                    ratingChange:change
-                })
-                .eq("playerId",playerId)
-                .eq("date",game.date);
-
-
-
-                console.log(
-                    playerId,
-                    game.date,
-                    "change:",
-                    change,
-                    "rating:",
-                    rating
-                );
+                const ratingBefore = rating;
 
 
                 rating += change;
+
+
+
+                await db
+                    .from("playerGames")
+                    .update({
+                        ratingChange: change
+                    })
+                    .eq("playerId", playerId)
+                    .eq("date", game.date);
+
+
+
+                console.log({
+                    playerId,
+                    date: game.date,
+                    before: ratingBefore,
+                    change,
+                    after: rating,
+                    win,
+                    completed,
+                    guesses,
+                    hints
+                });
 
             }
 
         }
 
 
+
+        /*
+            SAVE FINAL PLAYER RATING
+        */
+
         await db
-        .from("playerData")
-        .update({
-            rating:rating
-        })
-        .eq("playerId",playerId);
+            .from("playerData")
+            .update({
+                rating: rating
+            })
+            .eq("playerId", playerId);
 
 
 
         console.log(
-            "FINAL",
+            "FINAL RATING:",
             playerId,
             rating
         );
@@ -2221,6 +2243,8 @@ async function rebuildAllPlayerGameRatings() {
     );
 
 }
+
+
 
 async function getCachedLeaderboard(gameInfoObj){
 
