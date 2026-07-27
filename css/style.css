@@ -860,22 +860,51 @@ button:focus-visible {
 }
 
 
-/* Normal leaderboard (4 columns) */
 .leaderboard-header,
-.leaderboard-row {
-    display:grid;
-    grid-template-columns:40px 1fr 65px 45px;
-    align-items:center;
+.leaderboard-row,
+.stat-header,
+#leaderboardStatHeader {
+
+  display:grid;
+
+  grid-template-columns:40px 1fr 65px 45px;
+
+  align-items:center;
+
+  padding:6px 4px;
 }
 
 
-/* Stat leaderboard (3 columns) */
+.leaderboard-header,
+.leaderboard-row {
+
+  display:grid;
+
+  grid-template-columns:40px 1fr 65px 45px;
+
+  align-items:center;
+
+  padding:6px 4px;
+}
+
+
 .stat-header,
-.stat-row,
 #leaderboardStatHeader {
-    display:grid;
-    grid-template-columns:40px 1fr 45px;
-    align-items:center;
+
+  display:grid;
+
+  grid-template-columns:40px 1fr 65px 45px;
+
+  align-items:center;
+
+  padding:6px 4px;
+}
+
+.stat-header .stat-label,
+#leaderboardStatHeader .stat-label {
+    grid-column:4;
+    text-align:center;
+    transform: translateX(-3px);
 }
 
 .leaderboard-header,
@@ -934,11 +963,6 @@ button:focus-visible {
   font-weight:700;
 }
 
-.stat-header span:nth-child(3),
-#leaderboardStatHeader span:nth-child(3) {
-    text-align:center;
-    font-weight:700;
-}
 
 .stat-header .stat-label,
 #leaderboardStatHeader .stat-label {
