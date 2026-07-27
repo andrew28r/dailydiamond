@@ -390,7 +390,7 @@ async function saveGame() {
 
     // KEEP EXISTING RATING CHANGE
     ratingChange:
-      playerGame?.ratingChange ?? -25
+      playerGame?.ratingChange ?? null
   };
 
 
@@ -2087,10 +2087,10 @@ async function rebuildAllPlayerGameRatings() {
             .from("playerGames")
             .select("*")
             .eq("playerId", playerId)
-            .order("date", { ascending: true });
+            .order("date", { ascending:true });
 
 
-        if (gameError) {
+        if(gameError){
             console.error(gameError);
             continue;
         }
@@ -2099,9 +2099,9 @@ async function rebuildAllPlayerGameRatings() {
         let rating = 1000;
 
 
-        for (const game of games) {
+        for(const game of games){
 
-            let ratingChange = null;
+            let change = null;
 
 
             const completed =
@@ -2113,14 +2113,18 @@ async function rebuildAllPlayerGameRatings() {
                 Number(game.guessesNumber || 0);
 
 
-            // COMPLETED GAME
-            if (completed) {
+            /*
+                COMPLETED GAME
+            */
 
-                ratingChange = calculateRatingChange({
+            if(completed){
 
-                    win: String(game.win),
 
-                    guessesNumber: guesses,
+                let baseChange = calculateRatingChange({
+
+                    win:String(game.win),
+
+                    guessesNumber:guesses,
 
                     hintClicks:
                         Number(game.hintClicks || 0),
@@ -2130,82 +2134,93 @@ async function rebuildAllPlayerGameRatings() {
 
                 });
 
-            }
+
+                /*
+                    APPLY SAME MULTIPLIER
+                    AS LIVE GAME
+                */
+
+                const multiplier =
+                    getRatingMultiplier(rating);
 
 
-            // STARTED BUT NOT FINISHED
-            else if (guesses > 0) {
-
-                ratingChange = -25;
-
-            }
-
-
-            // Update only games that have a rating value
-            if (ratingChange !== null) {
-
-                const { error: updateError } = await db
-                    .from("playerGames")
-                    .update({
-                        ratingChange: ratingChange
-                    })
-                    .eq("playerId", playerId)
-                    .eq("date", game.date);
-
-
-                if (updateError) {
-
-                    console.error(
-                        "Update failed:",
-                        playerId,
-                        game.date,
-                        updateError
+                change =
+                    Math.round(
+                        baseChange * multiplier
                     );
 
-                }
+
+            }
 
 
-                rating += ratingChange;
+            /*
+                STARTED BUT NEVER FINISHED
+            */
+
+            else if(guesses > 0){
+
+                change = -25;
+
+            }
+
+
+            /*
+                NOTHING PLAYED
+            */
+
+            if(change !== null){
+
+
+                await db
+                .from("playerGames")
+                .update({
+                    ratingChange:change
+                })
+                .eq("playerId",playerId)
+                .eq("date",game.date);
+
 
 
                 console.log(
                     playerId,
                     game.date,
-                    ratingChange,
+                    "change:",
+                    change,
                     "rating:",
                     rating
                 );
+
+
+                rating += change;
 
             }
 
         }
 
 
-        // Save final rating
-        const { error: ratingError } = await db
-            .from("playerData")
-            .update({
-                rating: rating
-            })
-            .eq("playerId", playerId);
+        await db
+        .from("playerData")
+        .update({
+            rating:rating
+        })
+        .eq("playerId",playerId);
 
 
-        if (ratingError) {
-            console.error(
-                "Rating update failed:",
-                playerId,
-                ratingError
-            );
-        }
+
+        console.log(
+            "FINAL",
+            playerId,
+            rating
+        );
 
     }
 
 
     console.log(
-        "Finished rebuilding ratings for all players"
+        "ALL RATINGS REBUILT"
     );
-}
 
+}
 
 async function getCachedLeaderboard(gameInfoObj){
 
