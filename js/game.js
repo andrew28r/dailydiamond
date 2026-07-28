@@ -778,9 +778,10 @@ function getGameFromSeed(seed, dateString) {
   }
 
   const team = isTeamGame
-    ? TEAMS[Math.floor(r2 * TEAMS.length)]
+    ? rules.forcedTeam
+        ? TEAMS.find(t => t.id === rules.forcedTeam)
+        : TEAMS[Math.floor(r2 * TEAMS.length)]
     : null;
-
 
   let availableStats = STATS;
 
@@ -993,7 +994,7 @@ document.getElementById("hintBtn").addEventListener("click", async () => {
     document.getElementById("hintNumber").textContent = totalHintClicks;
 
     setHintStage(hintClickCount);
-    
+
     await saveGame();
 
     const initials = player.name
@@ -1840,6 +1841,13 @@ function getDailyGameRules(dateString) {
 
   switch (date.getDay()) {
 
+    case 0: // Sunday - Atlanta Braves Day
+      return {
+        type: "team",
+        teamOnly: true,
+        forcedTeam: 144
+      };
+
     case 1: // Monday
       return {
         type: "decade",
@@ -1870,7 +1878,7 @@ function getDailyGameRules(dateString) {
         teamOnly: true
       };
 
-    default: // Saturday + Sunday
+    default: // Saturday
       return {
         type: "random",
         teamOnly: null
