@@ -409,7 +409,14 @@ async function saveGame() {
     gameData.hintPlayer,
     gameData.ratingChange
   );
-
+    
+  if (
+    statusGameCompleted === "false" &&
+    guesses.length > 0 &&
+    playerGame?.ratingChange == null
+  ) {
+    await applyRatingChange(selectedDate, -25);
+  }
 
   await updateGamesPlayed(getPlayerId());
 
