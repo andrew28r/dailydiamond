@@ -17,6 +17,9 @@ let statusCompletedSameDay = "false";
 
 let inactivityTimer;
 
+let teamCache = {};
+let divisionCache = {};
+
 const TIMEOUT_MINUTES = 30;
 const TIMEOUT_MS = TIMEOUT_MINUTES * 60 * 1000;
 
@@ -989,9 +992,9 @@ document.getElementById("hintBtn").addEventListener("click", async () => {
 
     document.getElementById("hintNumber").textContent = totalHintClicks;
 
-    await saveGame();
-
     setHintStage(hintClickCount);
+    
+    await saveGame();
 
     const initials = player.name
         .split(" ")
@@ -1020,7 +1023,7 @@ document.getElementById("hintBtn").addEventListener("click", async () => {
 
             setTimeout(() => {
                 guessPlayer();
-            }, 100);
+            }, 10);
 
             hintClickCount = 0;
         }
@@ -1043,33 +1046,39 @@ document.getElementById("hintBtn").addEventListener("click", async () => {
 
             setTimeout(() => {
                 guessPlayer();
-            }, 100);
+            }, 10);
 
             hintClickCount = 0;
         }
     } 
     else {
         // NORMAL NON-TEAM GAME
+
+        const division = await getTeamDivision(team);
+
         if (hintClickCount === 1) {
             hint.textContent = `Hint: ${league}`;
         } 
         else if (hintClickCount === 2) {
-            hint.textContent = `Hint: ${league} | ${team}`;
+            hint.textContent = `Hint: ${league} | ${division}`;
         } 
         else if (hintClickCount === 3) {
-            hint.textContent = `Hint: ${league} | ${team} | ${position}`;
+            hint.textContent = `Hint: ${league} | ${division} | ${team}`;
         } 
         else if (hintClickCount === 4) {
-            hint.textContent = `Hint: ${league} | ${team} | ${position} | ${initials}`;
+            hint.textContent = `Hint: ${league} | ${division} | ${team} | ${position}`;
         } 
         else if (hintClickCount === 5) {
+            hint.textContent = `Hint: ${league} | ${division} | ${team} | ${position} | ${initials}`;
+        } 
+        else if (hintClickCount === 6) {
             hint.textContent = "";
 
             input.value = player.name;
 
             setTimeout(() => {
                 guessPlayer();
-            }, 100);
+            }, 10);
 
             hintClickCount = 0;
         }
@@ -1269,7 +1278,7 @@ function clearHintData() {
 
 }
 
-function loadHintStage() {
+async function loadHintStage() {
 
     const stage = hintClickCount;
 
@@ -1291,23 +1300,124 @@ function loadHintStage() {
     const isTeamGame = !!GAME.teamId;
     const isAllStarGame = GAME.gameType === "A";
 
-    if (stage === 1) {
-        if (isTeamGame) {
+    const division = await getTeamDivision(team);
+
+    if (isTeamGame) {
+
+        // TEAM GAME
+        if (stage === 1) {
             hint.textContent = `Hint: ${position}`;
-        } else {
+        }
+
+        else if (stage === 2) {
+            hint.textContent =
+                `Hint: ${position} | ${initials}`;
+        }
+
+    }
+
+    else if (isAllStarGame) {
+
+        // ALL STAR
+        if (stage === 1) {
             hint.textContent = `Hint: ${league}`;
         }
-    } 
-    else if (stage === 2) {
-        if (isTeamGame) {
-            hint.textContent = `Hint: ${position} | ${initials}`;
-        } else if (isAllStarGame) {
-            hint.textContent = `Hint: ${league} | ${position}`;
-        } else {
-            hint.textContent = `Hint: ${league} | ${team}`;
+
+        else if (stage === 2) {
+            hint.textContent =
+                `Hint: ${league} | ${position}`;
+        }
+
+        else if (stage === 3) {
+            hint.textContent =
+                `Hint: ${league} | ${position} | ${initials}`;
+        }
+
+    }
+
+    else {
+
+        // NORMAL GAME
+        if (stage === 1) {
+            hint.textContent =
+                `Hint: ${league}`;
+        }
+
+        else if (stage === 2) {
+            hint.textContent =
+                `Hint: ${league} | ${division}`;
+        }
+
+        else if (stage === 3) {
+            hint.textContent =
+                `Hint: ${league} | ${division} | ${team}`;
+        }
+
+        else if (stage === 4) {
+            hint.textContent =
+                `Hint: ${league} | ${division} | ${team} | ${position}`;
+        }
+
+        else if (stage === 5) {
+            hint.textContent =
+                `Hint: ${league} | ${division} | ${team} | ${position} | ${initials}`;
         }
     }
 }
+
+
+async function getTeamDivision(teamName) {
+
+    if (!teamName) return "";
+
+    if (divisionCache[teamName]) {
+        return divisionCache[teamName];
+    }
+
+    try {
+
+        const res = await fetch(
+            `https://statsapi.mlb.com/api/v1/teams?sportId=1`
+        );
+
+        const data = await res.json();
+
+        const team = data.teams.find(
+            t => t.name.toLowerCase() === teamName.toLowerCase()
+        );
+
+        if (!team) return "";
+
+
+        let division =
+            team.division?.name || "";
+
+
+        // Convert:
+        // "American League East" -> "East"
+        // "National League West" -> "West"
+        division = division
+            .replace("American League ", "")
+            .replace("National League ", "");
+
+
+        divisionCache[teamName] = division;
+
+
+        return division;
+
+
+    } catch(err) {
+
+        console.error(
+            "Division lookup failed:",
+            err
+        );
+
+        return "";
+    }
+}
+
 
 /* =========================
    FUTURE GAME PRELOADER
