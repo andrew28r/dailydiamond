@@ -1060,9 +1060,10 @@ document.getElementById("hintBtn").addEventListener("click", async () => {
         }
     } 
     else {
-        // NORMAL NON-TEAM GAME
+        // NORMAL GAME
 
         const division = await getTeamDivision(team);
+        const isPitchingGame = GAME.group === "pitching";
 
         if (hintClickCount === 1) {
             hint.textContent = `Hint: ${league}`;
@@ -1073,13 +1074,30 @@ document.getElementById("hintBtn").addEventListener("click", async () => {
         else if (hintClickCount === 3) {
             hint.textContent = `Hint: ${league} | ${division} | ${team}`;
         } 
-        else if (hintClickCount === 4) {
-            hint.textContent = `Hint: ${league} | ${division} | ${team} | ${position}`;
-        } 
-        else if (hintClickCount === 5) {
-            hint.textContent = `Hint: ${league} | ${division} | ${team} | ${position} | ${initials}`;
-        } 
-        else if (hintClickCount === 6) {
+
+        // REMOVE POSITION FOR PITCHING
+        else if (isPitchingGame && hintClickCount === 4) {
+            hint.textContent =
+                `Hint: ${league} | ${division} | ${team} | ${initials}`;
+        }
+
+        // HITTING POSITION HINT
+        else if (!isPitchingGame && hintClickCount === 4) {
+            hint.textContent =
+                `Hint: ${league} | ${division} | ${team} | ${position}`;
+        }
+
+        // HITTING INITIALS
+        else if (!isPitchingGame && hintClickCount === 5) {
+            hint.textContent =
+                `Hint: ${league} | ${division} | ${team} | ${position} | ${initials}`;
+        }
+
+        // AUTO GUESS
+        else if (
+            (isPitchingGame && hintClickCount === 5) ||
+            (!isPitchingGame && hintClickCount === 6)
+        ) {
             hint.textContent = "";
 
             input.value = player.name;
@@ -1346,6 +1364,8 @@ async function loadHintStage() {
     else {
 
         // NORMAL GAME
+        const isPitchingGame = GAME.group === "pitching";
+
         if (stage === 1) {
             hint.textContent =
                 `Hint: ${league}`;
@@ -1361,12 +1381,17 @@ async function loadHintStage() {
                 `Hint: ${league} | ${division} | ${team}`;
         }
 
-        else if (stage === 4) {
+        else if (isPitchingGame && stage === 4) {
+            hint.textContent =
+                `Hint: ${league} | ${division} | ${team} | ${initials}`;
+        }
+
+        else if (!isPitchingGame && stage === 4) {
             hint.textContent =
                 `Hint: ${league} | ${division} | ${team} | ${position}`;
         }
 
-        else if (stage === 5) {
+        else if (!isPitchingGame && stage === 5) {
             hint.textContent =
                 `Hint: ${league} | ${division} | ${team} | ${position} | ${initials}`;
         }
