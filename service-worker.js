@@ -1,4 +1,4 @@
-const CACHE_NAME = "daily-diamond-v1.1";
+const CACHE_NAME = "daily-diamond-v1.3";
 
 const STATIC_FILES = [
     "./icon-192.png",
@@ -17,7 +17,13 @@ self.addEventListener("install", event => {
 
 self.addEventListener("activate", event => {
     event.waitUntil(
-        self.clients.claim()
+        caches.keys().then(keys => {
+            return Promise.all(
+                keys
+                    .filter(key => key !== CACHE_NAME)
+                    .map(key => caches.delete(key))
+            );
+        }).then(() => self.clients.claim())
     );
 });
 
@@ -25,14 +31,13 @@ self.addEventListener("activate", event => {
 self.addEventListener("fetch", event => {
     const url = new URL(event.request.url);
 
+    // Ignore external requests (Supabase, AdSense, MLB API, etc.)
     if (url.origin !== location.origin) {
         return;
     }
 
     event.respondWith(
         fetch(event.request)
-            .catch(() => {
-                return caches.match(event.request);
-            })
+            .catch(() => caches.match(event.request))
     );
 });
