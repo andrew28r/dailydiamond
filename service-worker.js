@@ -1,4 +1,4 @@
-const CACHE_NAME = "daily-diamond-v1.8";
+const CACHE_NAME = "daily-diamond-v1.9";
 
 const STATIC_FILES = [
     "./icon-192.png",
@@ -48,16 +48,19 @@ self.addEventListener("push", event => {
 
     const data = event.data.json();
 
+
     const options = {
+
         body: data.body,
 
-        icon: "/icon-192.png",
+        icon: "./icon-192.png",
 
-        badge: "/icon-192.png",
+        badge: "./icon-192.png",
 
         data: {
-            url: "/"
+            url: "./"
         }
+
     };
 
 
@@ -77,6 +80,7 @@ self.addEventListener("push", event => {
 self.addEventListener("notificationclick", event => {
 
     event.notification.close();
+
 
     event.waitUntil(
 

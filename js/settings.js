@@ -4,10 +4,19 @@ if ("serviceWorker" in navigator) {
         "./service-worker.js"
     )
     .then(() => {
-        console.log("Service worker registered");
+
+        console.log(
+            "Service worker registered"
+        );
+
     })
-    .catch(err => {
-        console.log("SW error", err);
+    .catch(error => {
+
+        console.log(
+            "Service worker error",
+            error
+        );
+
     });
 
 }
