@@ -100,7 +100,7 @@ async function saveSubscription(subscription) {
     const { data, error } =
     await db
     .from("push_subscriptions")
-    .upsert(
+    .insert(
     {
         player_id: playerId,
 
