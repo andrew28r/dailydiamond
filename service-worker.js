@@ -1,16 +1,18 @@
 const CACHE_NAME = "daily-diamond-v1";
 
 const STATIC_FILES = [
-    "/",
-    "/index.html",
-    "/game.html",
-    "/ratings.html",
-    "/css/style.css",
-    "/js/index.js",
-    "/js/game.js",
-    "/js/ratings.js",
-    "/js/database.js",
-    "/js/api.js"
+    "./",
+    "./index.html",
+    "./game.html",
+    "./ratings.html",
+    "./css/style.css",
+    "./js/index.js",
+    "./js/game.js",
+    "./js/database.js",
+    "./js/api.js",
+    "./js/ratings.js",
+    "./icon-192.png",
+    "./icon-512.png"
 ];
 
 
