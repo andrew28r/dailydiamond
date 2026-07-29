@@ -106,64 +106,48 @@ sendTestNotification
 
 
 
-async function sendTestNotification(){
+async function sendTestNotification() {
+
+    const playerId =
+        localStorage.getItem("playerId");
 
 
-const playerId =
-localStorage.getItem("playerId");
+    if (!playerId) {
+        alert("No player logged in");
+        return;
+    }
 
 
-if(!playerId){
+    const { data, error } =
+    await db.functions.invoke(
+        "send-notification",
+        {
+            body: {
 
-alert("No player logged in");
+                playerId: playerId,
 
-return;
+                title: "Daily Diamond",
 
-}
+                body: "Today's challenge is ready!"
 
-
-
-const {data,error} =
-await db.functions.invoke(
-"send-notification",
-{
-
-body:{
-
-playerId: playerId,
-
-title:
-"💎 Daily Diamond",
-
-body:
-"Today's challenge is ready!"
-
-}
-
-}
-
-);
+            }
+        }
+    );
 
 
-
-if(error){
-
-console.log(error);
-
-alert(
-"Notification failed"
-);
-
-return;
-
-}
+    console.log(data);
+    console.log(error);
 
 
+    if (error) {
 
-alert(
-"Notification sent!"
-);
+        alert(error.message);
+        return;
 
+    }
+
+
+    alert("Notification Sent!");
 
 }
 
@@ -172,8 +156,15 @@ await db.functions.invoke(
   {
     body:{
       playerId: localStorage.getItem("playerId"),
-      title:"💎 Daily Diamond",
+      title:"Daily Diamond",
       body:"Today's challenge is ready!"
     }
   }
+);
+
+document
+.getElementById("sendTestNotification")
+.addEventListener(
+    "click",
+    sendTestNotification
 );
