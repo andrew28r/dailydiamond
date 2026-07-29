@@ -132,11 +132,9 @@ body:{
 
 playerId: playerId,
 
-title:
-"💎 Daily Diamond",
+title: "Today's Challenge is ready!",
 
-body:
-"Today's challenge is ready!"
+body: ""
 
 }
 
