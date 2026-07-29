@@ -100,8 +100,8 @@ async function saveSubscription(subscription) {
     const { data, error } =
     await db
     .from("push_subscriptions")
-    .upsert({
-
+    .upsert(
+    {
         player_id: playerId,
 
         endpoint:
@@ -113,12 +113,17 @@ async function saveSubscription(subscription) {
         auth:
         json.keys.auth
 
-    })
+    },
+    {
+        onConflict: "endpoint"
+    }
+    )
     .select();
 
 
 
-    console.log("Insert result:", data, error);
+    console.log("DATA:", data);
+    console.log("ERROR:", error);
 
 
 
