@@ -1,3 +1,17 @@
+if ("serviceWorker" in navigator) {
+
+    navigator.serviceWorker.register(
+        "./service-worker.js"
+    )
+    .then(() => {
+        console.log("Service worker registered");
+    })
+    .catch(err => {
+        console.log("SW error", err);
+    });
+
+}
+
 document.addEventListener("DOMContentLoaded", async () => {
 
 
@@ -74,10 +88,72 @@ document.getElementById("backBtn").onclick = () => {
     window.location.href = "index.html";
 };
 
-if ("serviceWorker" in navigator) {
+document
+.getElementById("testNotification")
+.addEventListener(
+"click",
+sendTestNotification
+);
 
-    navigator.serviceWorker.register(
-        "./service-worker.js"
-    );
+
+
+async function sendTestNotification(){
+
+
+const playerId =
+localStorage.getItem("playerId");
+
+
+if(!playerId){
+
+alert("No player logged in");
+
+return;
+
+}
+
+
+
+const {data,error} =
+await db.functions.invoke(
+"send-notification",
+{
+
+body:{
+
+playerId: playerId,
+
+title:
+"💎 Daily Diamond",
+
+body:
+"Today's challenge is ready!"
+
+}
+
+}
+
+);
+
+
+
+if(error){
+
+console.log(error);
+
+alert(
+"Notification failed"
+);
+
+return;
+
+}
+
+
+
+alert(
+"Notification sent!"
+);
+
 
 }

@@ -36,7 +36,13 @@ async function enableNotifications() {
 
 
 
-    const subscription =
+    let subscription =
+        await registration.pushManager.getSubscription();
+
+
+    if (!subscription) {
+
+        subscription =
         await registration.pushManager.subscribe({
 
             userVisibleOnly: true,
@@ -47,6 +53,8 @@ async function enableNotifications() {
             )
 
         });
+
+    }
 
 
 
@@ -63,7 +71,6 @@ async function enableNotifications() {
 
 
 
-
 async function saveSubscription(subscription) {
 
 
@@ -75,9 +82,14 @@ async function saveSubscription(subscription) {
     localStorage.getItem("playerId");
 
 
+    console.log("Player ID:", playerId);
+    console.log("Subscription:", json);
+
+
+
     if (!playerId) {
 
-        console.log("No player logged in");
+        alert("No player logged in");
 
         return;
 
@@ -85,7 +97,7 @@ async function saveSubscription(subscription) {
 
 
 
-    const { error } =
+    const { data, error } =
     await db
     .from("push_subscriptions")
     .upsert({
@@ -101,15 +113,25 @@ async function saveSubscription(subscription) {
         auth:
         json.keys.auth
 
-    });
+    })
+    .select();
+
+
+
+    console.log("Insert result:", data, error);
 
 
 
     if(error){
 
-        console.log(error);
+        alert(error.message);
+
+        return;
 
     }
+
+
+    alert("Notification subscription saved!");
 
 }
 
