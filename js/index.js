@@ -680,3 +680,15 @@ function updateMenuPlayerId() {
     document.getElementById("menuPlayerId").textContent =
         localStorage.getItem("playerId") || "Not Logged In";
 }
+
+
+
+if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("/dailydiamond/service-worker.js")
+    .then(() => {
+        console.log("Service Worker registered");
+    })
+    .catch(error => {
+        console.log("Service Worker failed:", error);
+    });
+}
