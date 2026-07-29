@@ -103,11 +103,14 @@ async function saveSubscription(subscription) {
     const { data, error } =
     await db
     .from("push_subscriptions")
-    .insert({
+    .upsert({
         player_id: playerId,
         endpoint: json.endpoint,
         p256dh: json.keys.p256dh,
         auth: json.keys.auth
+    },
+    {
+        onConflict: "endpoint"
     })
     .select();
 
