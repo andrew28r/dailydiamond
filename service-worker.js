@@ -10,7 +10,7 @@ const STATIC_FILES = [
     "./js/game.js",
     "./js/database.js",
     "./js/api.js",
-    "./js/ratings.js",
+    "./js/rating.js",
     "./icon-192.png",
     "./icon-512.png"
 ];
