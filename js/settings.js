@@ -98,7 +98,7 @@ document.getElementById("backBtn").onclick = () => {
 };
 
 document
-.getElementById("testNotification")
+.getElementById("sendTestNotification")
 .addEventListener(
 "click",
 sendTestNotification
@@ -107,7 +107,7 @@ sendTestNotification
 
 
 async function sendTestNotification(){
-
+console.log("Sending notification...");
 
 const playerId =
 localStorage.getItem("playerId");
