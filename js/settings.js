@@ -108,28 +108,14 @@ sendTestNotification
 
 async function sendTestNotification() {
 
-    const playerId =
-        localStorage.getItem("playerId");
-
-
-    if (!playerId) {
-        alert("No player logged in");
-        return;
-    }
-
-
     const { data, error } =
     await db.functions.invoke(
         "send-notification",
         {
             body: {
-
-                playerId: playerId,
-
+                playerId: localStorage.getItem("playerId"),
                 title: "Daily Diamond",
-
                 body: "Today's challenge is ready!"
-
             }
         }
     );
@@ -140,14 +126,12 @@ async function sendTestNotification() {
 
 
     if (error) {
-
         alert(error.message);
         return;
-
     }
 
 
-    alert("Notification Sent!");
+    alert("Notification Sent");
 
 }
 
