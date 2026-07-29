@@ -166,14 +166,3 @@ alert(
 
 
 }
-
-await db.functions.invoke(
-  "send-notification",
-  {
-    body:{
-      playerId: localStorage.getItem("playerId"),
-      title:"Daily Diamond",
-      body:"Today's challenge is ready!"
-    }
-  }
-);
