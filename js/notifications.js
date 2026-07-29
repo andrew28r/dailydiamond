@@ -77,6 +77,11 @@ async function saveSubscription(subscription) {
     localStorage.getItem("playerId");
 
 
+    const { data: authData, error: authError } =
+    await db.auth.getSession();
+
+    console.log("SESSION:", authData);
+    console.log("AUTH ERROR:", authError);
 
     if (!playerId) {
 
@@ -98,22 +103,11 @@ async function saveSubscription(subscription) {
     const { data, error } =
     await db
     .from("push_subscriptions")
-    .upsert({
-
+    .insert({
         player_id: playerId,
-
-        endpoint:
-        json.endpoint,
-
-        p256dh:
-        json.keys.p256dh,
-
-        auth:
-        json.keys.auth
-
-    },
-    {
-        onConflict: "endpoint"
+        endpoint: json.endpoint,
+        p256dh: json.keys.p256dh,
+        auth: json.keys.auth
     })
     .select();
 

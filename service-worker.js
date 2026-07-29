@@ -1,4 +1,4 @@
-const CACHE_NAME = "daily-diamond-v1.9";
+const CACHE_NAME = "daily-diamond-v2.0";
 
 const STATIC_FILES = [
     "./icon-192.png",
