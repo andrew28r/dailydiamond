@@ -1,4 +1,4 @@
-const CACHE_NAME = "daily-diamond-v1.6";
+const CACHE_NAME = "daily-diamond-v1.7";
 
 const STATIC_FILES = [
     "./icon-192.png",
@@ -40,4 +40,50 @@ self.addEventListener("fetch", event => {
         fetch(event.request)
             .catch(() => caches.match(event.request))
     );
+});
+
+
+
+self.addEventListener("push", event => {
+
+    const data = event.data.json();
+
+    const options = {
+        body: data.body,
+
+        icon: "/icon-192.png",
+
+        badge: "/icon-192.png",
+
+        data: {
+            url: "/"
+        }
+    };
+
+
+    event.waitUntil(
+
+        self.registration.showNotification(
+            data.title,
+            options
+        )
+
+    );
+
+});
+
+
+
+self.addEventListener("notificationclick", event => {
+
+    event.notification.close();
+
+    event.waitUntil(
+
+        clients.openWindow(
+            event.notification.data.url
+        )
+
+    );
+
 });

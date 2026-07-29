@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<title>Settings - Daily Diamond</title>
+
+<link rel="icon" type="image/png" href="./icon-192.png">
+<link rel="apple-touch-icon" href="./icon-512.png">
+<link rel="manifest" href="./manifest.json">
+
+<meta name="theme-color" content="#1d428a">
+
+<link rel="stylesheet" href="css/style.css">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script src="js/database.js"></script>
+
+<script src="js/settings.js" defer></script>
+
+
+<script src="js/notifications.js" defer></script>
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+</head>
+
+
+<body>
+
+
+<div class="top-bar">
+
+
+  <button class="icon-btn" id="backBtn">❮</button>
+
+  <div class="title">Daily Diamond</div>
+
+
+</div>
+
+
+
+<div class="container">
+
+
+<h2>⚙️ Settings</h2>
+
+
+
+<div class="settings-card">
+
+<h3>🔔 Daily Notifications</h3>
+
+<p>
+Get notified when today's Daily Diamond challenge is ready.
+</p>
+
+
+<button id="enableNotifications">
+Enable Notifications
+</button>
+
+
+<p id="notificationStatus">
+Checking status...
+</p>
+
+
+</div>
+
+
+
+
+<div class="settings-card">
+
+<h3>👤 Account</h3>
+
+
+<p>
+Username:
+<strong id="settingsUsername">
+Loading...
+</strong>
+</p>
+
+
+<button onclick="window.location.href='index.html'">
+Change Username
+</button>
+
+
+</div>
+
+
+
+
+
+<div class="settings-card">
+
+<h3>📱 App</h3>
+
+<p>
+Daily Diamond
+</p>
+
+<p>
+Version alpha 5.2
+</p>
+
+</div>
+
+
+
+</body>
+
+</html>
