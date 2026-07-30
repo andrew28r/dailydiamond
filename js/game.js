@@ -669,7 +669,7 @@ function shareResults() {
       : "Solved ✅";
 
   const text =
-`Daily Diamond 5 - ${displayDate}
+`Daily Diamond - ${displayDate}
 
 Total guesses: ${guesses.length}
 🟢 ${green}
