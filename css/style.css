@@ -1500,3 +1500,24 @@ margin-top:0;
 width:100%;
 
 }
+
+
+.title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 24px;
+  font-weight: bold;
+}
+
+.header-logo {
+  width: 35px;
+  height: 35px;
+  object-fit: contain;
+}
+
+.menu-wrapper {
+  position: absolute;
+  right: 15px;
+}
