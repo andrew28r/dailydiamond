@@ -18,28 +18,32 @@ window.playerDatabase = async function () {
 
   console.log(data);
 };
-async function createPlayer(playerId) {
 
-  // Check if player already exists
+
+async function createPlayer(
+  playerId,
+  guest = true,
+  passwordHash = null
+) {
+
   const { data: existingPlayer, error: checkError } = await db
     .from("playerData")
     .select("*")
     .eq("playerId", playerId)
     .maybeSingle();
 
+
   if (checkError) {
     console.log(checkError);
     return;
   }
 
-  // Player already exists
+
   if (existingPlayer) {
-    console.log("Existing player found:", existingPlayer);
     return existingPlayer;
   }
 
 
-  // Create new player
   const { data, error } = await db
     .from("playerData")
     .insert([
@@ -48,18 +52,20 @@ async function createPlayer(playerId) {
         gamesPlayed: 0,
         wins: 0,
         streak: 0,
-        rating: 1000
+        rating: 1000,
+        guest: guest,
+        password_hash: passwordHash
       }
     ])
     .select()
     .single();
+
 
   if (error) {
     console.log(error);
     return;
   }
 
-  console.log("New player created:", data);
 
   return data;
 }
@@ -67,9 +73,33 @@ async function createPlayer(playerId) {
 
 const playBtn = document.getElementById("playBtn");
 
-playBtn.addEventListener("click", () => {
+playBtn.addEventListener("click", async () => {
+
+  const playerId = localStorage.getItem("playerId");
+
+
+  const { data } = await db
+    .from("playerData")
+    .select("playerId")
+    .eq("playerId", playerId)
+    .maybeSingle();
+
+
+  if (!data) {
+
+    await createPlayer(
+      playerId,
+      true
+    );
+
+  }
+
+
   const today = getEasternDateString();
-  window.location.href = `game.html?date=${today}`;
+
+  window.location.href =
+    `game.html?date=${today}`;
+
 });
 
 async function loadDayButtons() {
@@ -158,32 +188,36 @@ async function loadDayButtons() {
   });
 }
 
-document.addEventListener("DOMContentLoaded", loadDayButtons);
+//document.addEventListener("DOMContentLoaded", loadDayButtons);
 
 function openPopup() {
+
   const popup = document.getElementById("playerIdPopup");
   const input = document.getElementById("username");
+  const password = document.getElementById("password");
 
   const playerId = localStorage.getItem("playerId");
 
+
   if (playerId) {
     input.value = playerId;
-    popup.dataset.canClose = "true";
-  } else {
+  } 
+  else {
     input.value = "";
-    popup.dataset.canClose = "false";
   }
 
+  password.value = "";
+
   popup.style.display = "flex";
+
 }
 
 function closePopup() {
   const popup = document.getElementById("playerIdPopup");
-
-  if (popup.dataset.canClose !== "true") return;
-
   popup.style.display = "none";
 }
+
+
 const popup = document.getElementById("playerIdPopup");
 
 popup.addEventListener("click", (e) => {
@@ -196,6 +230,7 @@ document.addEventListener("keydown", (e) => {
     closePopup();
   }
 });
+
 async function submitPlayerId() {
   const username = document.getElementById("username").value.trim();
 
@@ -252,14 +287,61 @@ async function submitPlayerId() {
   loadDayButtons();
 }
 
-const localPlayerId = localStorage.getItem("playerId");
-playerDatabase();
 
-if (!localPlayerId) {
-  openPopup();
+async function initializePlayer(){
+
+  let playerId = localStorage.getItem("playerId");
+
+
+  if (!playerId){
+
+    playerId = await generateGuestName();
+
+    localStorage.setItem(
+      "playerId",
+      playerId
+    );
+
+
+    localStorage.setItem(
+      "guest",
+      "true"
+    );
+
+
+    console.log(
+      "Created local guest:",
+      playerId
+    );
+
+  }
+
+
+  updateMenuPlayerId();
+  loadPlayerStreak();
+  loadDayButtons();
+
+  await updateLoginButton();
+
 }
 
-console.log("Current player ID:", localPlayerId);
+async function startApp(){
+
+    await initializePlayer();
+
+    await playerDatabase();
+
+    await updateLoginButton();
+
+}
+
+startApp();
+
+console.log(
+  "Current player ID:",
+  localStorage.getItem("playerId")
+);
+
 
 function formatLocalDate(date) {
   const year = date.getFullYear();
@@ -282,7 +364,13 @@ async function loadPlayerStreak() {
     .from("playerData")
     .select("streak")
     .eq("playerId", playerId)
-    .single();
+    .maybeSingle();
+
+
+  if(!data){
+    document.getElementById("streakDisplay").textContent = "";
+    return;
+  }
 
   if (error) {
     console.error("Error loading streak:", error);
@@ -672,8 +760,50 @@ menu.addEventListener("click", (e) => {
 updateMenuPlayerId();
 
 document.getElementById("changeUserBtn").addEventListener("click", () => {
-    menu.classList.add("hidden");
-    openPopup(); // or whatever function currently opens playerIdPopup
+
+  menu.classList.add("hidden");
+
+  const popup = document.getElementById("changeUsernamePopup");
+
+  document.getElementById("newUsername").value =
+    localStorage.getItem("playerId");
+
+  document.getElementById("usernameChangeMessage").textContent = "";
+
+  popup.style.display = "flex";
+
+});
+
+document.getElementById("cancelUsernameBtn")
+.addEventListener("click", () => {
+
+  document.getElementById("changeUsernamePopup").style.display = "none";
+
+});
+
+
+const saveUsernameBtn = document.getElementById("saveUsernameBtn");
+
+console.log("Save button:", saveUsernameBtn);
+
+saveUsernameBtn.addEventListener("click", async () => {
+
+  console.log("Save clicked");
+
+  const newUsername = document
+    .getElementById("newUsername")
+    .value
+    .trim();
+
+  console.log("New username:", newUsername);
+
+  if (!newUsername) {
+    console.log("No username entered");
+    return;
+  }
+
+  await changeUsername(newUsername);
+
 });
 
 function updateMenuPlayerId() {
@@ -692,3 +822,603 @@ if ("serviceWorker" in navigator) {
         console.log("Service Worker failed:", error);
     });
 }
+
+async function generateGuestName(){
+
+  const words = [
+    "Diamond",
+    "Slugger",
+    "Baseball",
+    "HomeRun",
+    "Fastball",
+    "Curveball"
+  ];
+
+
+  while (true) {
+
+    const word =
+      words[Math.floor(Math.random()*words.length)];
+
+
+    const number =
+      Math.floor(Math.random()*9000)+1000;
+
+
+    const guestName = word + number;
+
+
+    const { data, error } = await db
+      .from("playerData")
+      .select("playerId")
+      .eq("playerId", guestName)
+      .maybeSingle();
+
+
+    if (error) {
+      console.error(error);
+      continue;
+    }
+
+
+    // Name is available
+    if (!data) {
+      return guestName;
+    }
+
+  }
+
+}
+
+
+async function updateLoginButton(){
+
+  const loginMenuBtn = document.getElementById("loginMenuBtn");
+  const logoutBtn = document.getElementById("logoutBtn");
+  const changeUserBtn = document.getElementById("changeUserBtn");
+
+  const playerId = localStorage.getItem("playerId");
+
+
+  if(!playerId){
+
+    loginMenuBtn.style.display = "block";
+    logoutBtn.style.display = "none";
+    changeUserBtn.style.display = "none";
+
+    return;
+  }
+
+
+  const { data, error } = await db
+    .from("playerData")
+    .select("guest")
+    .eq("playerId", playerId)
+    .maybeSingle();
+
+
+  if(error){
+    console.log(error);
+    return;
+  }
+
+
+  // Guest player
+  if(!data || data.guest === true){
+
+    loginMenuBtn.style.display = "block";
+    logoutBtn.style.display = "none";
+    changeUserBtn.style.display = "none";
+
+    return;
+
+  }
+
+
+  // Logged in account
+  if(data.guest === false){
+
+    loginMenuBtn.style.display = "none";
+    logoutBtn.style.display = "block";
+    changeUserBtn.style.display = "block";
+
+  }
+
+}
+
+/*
+const loginBtn = document.getElementById("loginBtn");
+
+loginBtn.addEventListener("click", () => {
+  openPopup();
+});*/
+
+const loginMenuBtn = document.getElementById("loginMenuBtn");
+
+loginMenuBtn.addEventListener("click", () => {
+
+  menu.classList.add("hidden");
+
+  openPopup();
+
+});
+
+
+const usernameInput = document.getElementById("username");
+const accountActionBtn = document.getElementById("accountActionBtn");
+
+
+usernameInput.addEventListener("input", async () => {
+
+  const username = usernameInput.value.trim();
+
+  if (!username) {
+    accountActionBtn.textContent = "Create Account";
+    return;
+  }
+
+
+  const { data } = await db
+    .from("playerData")
+    .select("playerId, password_hash")
+    .eq("playerId", username)
+    .maybeSingle();
+
+
+  if (data) {
+
+    // Player exists but has no password
+    if (!data.password_hash) {
+
+      accountActionBtn.textContent = "Create Account";
+
+    }
+    else {
+
+      // Player exists and has password
+      accountActionBtn.textContent = "Login";
+
+    }
+
+  } 
+  else {
+
+    // New player
+    accountActionBtn.textContent = "Create Account";
+
+  }
+
+});
+
+
+document.getElementById("password").addEventListener("input", () => {
+  document.getElementById("accountMessage").textContent = "";
+});
+usernameInput.addEventListener("input", () => {
+  document.getElementById("accountMessage").textContent = "";
+});
+
+accountActionBtn.addEventListener("click", async () => {
+
+  const username = usernameInput.value.trim();
+  const password = document.getElementById("password").value;
+
+  if(!username || !password){
+    document.getElementById("accountMessage").textContent =
+      "Enter username and password";
+    return;
+  }
+
+
+  const currentPlayer = localStorage.getItem("playerId");
+
+
+  const { data: currentAccount } = await db
+    .from("playerData")
+    .select("*")
+    .eq("playerId", currentPlayer)
+    .maybeSingle();
+
+
+  const { data: requestedAccount } = await db
+    .from("playerData")
+    .select("*")
+    .eq("playerId", username)
+    .maybeSingle();
+
+
+
+    // Existing account = login
+  // Existing account
+  // Existing account
+  if(requestedAccount){
+
+      // Normal account
+      if(requestedAccount.password_hash){
+
+          await loginAccount(username,password);
+          return;
+
+      }
+
+
+      // Guest account
+      if(
+          requestedAccount.guest === true &&
+          currentPlayer === username
+      ){
+
+          const passwordHash = await hashPassword(password);
+
+
+          await db
+            .from("playerData")
+            .update({
+                password_hash: passwordHash,
+                guest:false
+            })
+            .eq("playerId", username);
+
+
+          localStorage.setItem(
+              "playerId",
+              username
+          );
+
+
+          updateMenuPlayerId();
+          updateLoginButton();
+
+          return;
+      }
+
+
+      // Someone else trying to take guest name
+      document.getElementById("accountMessage").textContent =
+        "This player ID already exists.";
+
+      return;
+  }
+
+
+  // Current player is guest -> rename guest
+  if(currentAccount && currentAccount.guest === true){
+
+    console.log(
+      "Migrating",
+      currentPlayer,
+      "to",
+      username
+    );
+
+
+    const success = await migrateGuestAccount(
+      currentPlayer,
+      username,
+      password
+    );
+
+    if(success){
+      document.getElementById("playerIdPopup").style.display = "none";
+    }
+    return;
+
+  }
+
+
+
+  // Normal new account
+  await createAccount(
+    username,
+    password
+  );
+
+});
+
+async function hashPassword(password){
+
+  const encoder = new TextEncoder();
+
+  const data = encoder.encode(password);
+
+  const hash = await crypto.subtle.digest(
+    "SHA-256",
+    data
+  );
+
+  return Array.from(
+    new Uint8Array(hash)
+  )
+  .map(b => b.toString(16).padStart(2,"0"))
+  .join("");
+
+}
+
+async function createAccount(username,password){
+
+  const passwordHash = await hashPassword(password);
+
+
+  await createPlayer(
+    username,
+    false,
+    passwordHash
+  );
+
+
+  localStorage.setItem(
+    "playerId",
+    username
+  );
+
+
+  document.getElementById("playerIdPopup").style.display="none";
+
+  updateMenuPlayerId();
+  updateLoginButton();
+
+}
+
+async function loginAccount(username,password){
+
+  const passwordHash = await hashPassword(password);
+
+
+  const { data, error } = await db
+    .from("playerData")
+    .select("*")
+    .eq("playerId", username)
+    .eq("password_hash", passwordHash)
+    .maybeSingle();
+
+
+  if(error){
+    console.log(error);
+    return;
+  }
+
+
+  if(!data){
+
+    document.getElementById("accountMessage").textContent =
+      "Wrong or invalid password";
+
+    return;
+
+  }
+
+
+  localStorage.setItem(
+    "playerId",
+    username
+  );
+
+
+  document.getElementById("playerIdPopup").style.display="none";
+
+
+  updateMenuPlayerId();
+  updateLoginButton();
+  loadPlayerStreak();
+  loadDayButtons();
+
+}
+
+async function upgradeGuestAccount(username,password){
+
+  const passwordHash = await hashPassword(password);
+
+
+  const { data, error } = await db
+    .from("playerData")
+    .update({
+      guest:false,
+      password_hash:passwordHash
+    })
+    .eq("playerId",username)
+    .select()
+    .single();
+
+
+  if(error){
+    console.log(error);
+    return;
+  }
+
+
+  localStorage.setItem(
+    "playerId",
+    username
+  );
+
+
+  document.getElementById("playerIdPopup").style.display="none";
+
+
+  updateMenuPlayerId();
+  updateLoginButton();
+  loadPlayerStreak();
+  loadDayButtons();
+
+
+  console.log("Guest upgraded:", data);
+
+}
+
+async function migrateGuestAccount(
+  oldId,
+  newId,
+  password
+){
+
+  const passwordHash = await hashPassword(password);
+
+  const {error: gamesError} = await db
+    .from("playerGames")
+    .update({
+      playerId:newId
+    })
+    .eq("playerId",oldId);
+
+
+  if(gamesError){
+    console.log(gamesError);
+    return false;
+  }
+
+
+  const {error: playerError} = await db
+    .from("playerData")
+    .update({
+      playerId:newId,
+      guest:false,
+      password_hash:passwordHash
+    })
+    .eq("playerId",oldId);
+
+
+  if(playerError){
+    console.log(playerError);
+    return false;
+  }
+
+
+  localStorage.setItem(
+    "playerId",
+    newId
+  );
+
+
+  updateMenuPlayerId();
+  updateLoginButton();
+  loadPlayerStreak();
+  loadDayButtons();
+
+
+  return true;
+}
+
+
+const logoutBtn = document.getElementById("logoutBtn");
+
+logoutBtn.addEventListener("click", async () => {
+
+  localStorage.removeItem("playerId");
+
+
+  const guestName = await generateGuestName();
+
+
+  localStorage.setItem(
+    "playerId",
+    guestName
+  );
+
+
+  console.log("New local guest:", guestName);
+
+
+  // Refresh page
+  window.location.reload();
+
+});
+
+async function changeUsername(newUsername) {
+
+  const oldUsername = localStorage.getItem("playerId");
+
+  if (!oldUsername) {
+    return;
+  }
+
+
+  // Check if new username already exists
+  const { data: existing } = await db
+    .from("playerData")
+    .select("playerId")
+    .eq("playerId", newUsername)
+    .maybeSingle();
+
+
+  if (existing) {
+    document.getElementById("usernameChangeMessage").textContent =
+      "Username already taken";
+    return;
+  }
+
+
+  // Update playerData playerId
+  const { error: playerError } = await db
+    .from("playerData")
+    .update({
+      playerId: newUsername
+    })
+    .eq("playerId", oldUsername);
+
+
+  if (playerError) {
+    console.log("PlayerData update error:", playerError);
+    return;
+  }
+
+
+  // Update playerGames playerId
+  const { error: gamesError } = await db
+    .from("playerGames")
+    .update({
+      playerId: newUsername
+    })
+    .eq("playerId", oldUsername);
+
+
+  if (gamesError) {
+    console.log("PlayerGames update error:", gamesError);
+    return;
+  }
+
+
+  // Update browser
+  localStorage.setItem(
+    "playerId",
+    newUsername
+  );
+
+
+  updateMenuPlayerId();
+  loadDayButtons();
+  loadPlayerStreak();
+
+
+  document.getElementById("changeUsernamePopup").style.display = "none";
+
+
+  console.log(
+    "Username changed:",
+    oldUsername,
+    "→",
+    newUsername
+  );
+
+}
+
+
+const passwordInput = document.getElementById("password");
+const togglePassword = document.getElementById("togglePassword");
+
+togglePassword.addEventListener("click", () => {
+
+  if (passwordInput.type === "password") {
+
+    // Show password
+    passwordInput.type = "text";
+    togglePassword.textContent = "◎";
+
+  } else {
+
+    // Hide password
+    passwordInput.type = "password";
+    togglePassword.textContent = "◉";
+
+  }
+
+});

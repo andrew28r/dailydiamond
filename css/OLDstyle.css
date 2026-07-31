@@ -741,7 +741,6 @@ button:focus-visible {
   border:1px solid #ccc;
 }
 
-#playBtn,
 #calendarButton {
 
   margin-top:12px;
@@ -763,12 +762,6 @@ button:focus-visible {
   margin-left:auto;
 
   margin-right:auto;
-
-}
-
-#playBtn {
-  height:38px;
-  margin-bottom:15px;
 
 }
 
@@ -1522,111 +1515,4 @@ width:100%;
   width: 35px;
   height: 35px;
   object-fit: contain;
-}
-
-#loginBtn {
-  display: block;
-  margin: 0 auto;
-}
-
-#accountMessage {
-  color: #ff4d4d;
-  margin-top: 10px;
-  font-size: 14px;
-  min-height: 18px;
-}
-
-/* Change Username popup buttons */
-#changeUsernamePopup #saveUsernameBtn,
-#changeUsernamePopup #cancelUsernameBtn {
-  width: 120px;
-  padding: 10px 20px;
-  margin: 10px 5px 0;
-  border-radius: 8px;
-  font-size: 16px;
-  cursor: pointer;
-}
-
-
-/* Put buttons next to each other */
-#changeUsernamePopup .popup-content {
-  text-align: center;
-}
-
-
-/* Save button */
-#changeUsernamePopup #saveUsernameBtn {
-  background: #1d428a;
-  color: white;
-  border: none;
-}
-
-
-/* Cancel button */
-#changeUsernamePopup #cancelUsernameBtn {
-  background: #777;
-  color: white;
-  border: none;
-}
-
-
-/* Hover effects */
-#changeUsernamePopup #saveUsernameBtn:hover {
-  opacity: 0.85;
-}
-
-
-#changeUsernamePopup #cancelUsernameBtn:hover {
-  opacity: 0.85;
-}
-
-.username-buttons {
-  display: flex;
-  justify-content: center;
-  gap: 10px;
-  margin-top: 15px;
-}
-
-
-.password-wrapper {
-  position: relative;
-  width: 100%;
-}
-
-.password-wrapper input {
-  width: 100%;
-  padding-right: 45px;
-  box-sizing: border-box;
-}
-#togglePassword {
-  position: absolute;
-
-  right: 10px;
-  top: 0;
-
-  height: 100%;
-  width: 35px;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  border: none;
-  background: transparent;
-
-  color: black;
-  cursor: pointer;
-
-  font-size: 18px;
-  padding: 0 !important;
-  margin: 0 !important;
-  line-height: 1 !important;
-
-  transform: translateY(1px);
-}
-
-
-.last5-divider {
-  border-bottom:1px solid #ddd;
-  margin:8px 4px 16px;
 }

@@ -56,10 +56,6 @@
         
       </div>
 
-      <button class="menu-btn" id="loginMenuBtn">
-        Login / Create Account
-      </button>
-
       <button class="menu-btn" id="changeUserBtn">
         Change Username
       </button>
@@ -68,13 +64,8 @@
         Ratings
       </button>
 
-
      <button class="menu-btn" id="settingsBtn" onclick="window.location.href='settings.html'">
         Settings
-      </button>
-
-      <button class="menu-btn" id="logoutBtn">
-        Logout
       </button>
 
     </div> <!-- menu -->
@@ -86,17 +77,11 @@
 <div class="container">
   <p>The daily Baseball rankings guessing challenge.</p>
   <p id="streakDisplay"></p>
-  <!--<button id="loginBtn">Login</button>-->
-  <!--<button id="playBtn">Play</button>-->
+  <button id="playBtn">Play</button>
 </div>
 
 <div class="last5games">
-  
-  <button id="playBtn">Play</button>
-  <div class="last5-divider">
-</div>
-
-<h4>Last 5 Days</h4>
+  <h4>Last 5 Days</h4>
 
   <div id="dayButtons" class="day-buttons"></div>
   <button id="calendarButton" title="View Calendar">Previous Games</button>
@@ -105,32 +90,11 @@
 <div id="playerIdPopup" class="popup" style="display:none;">
   <div class="popup-content">
 
-    <h2 id="playerIdTitle">Login / Create Account</h2>
+    <h2 id="playerIdTitle">Login</h2>
 
-    <input 
-      id="username" 
-      placeholder="Username..." 
-      autocomplete="off">
+    <input id="username" placeholder="Username..." autocomplete="off">
 
-    <div class="password-wrapper">
-
-      <input 
-        id="password" 
-        type="password"
-        placeholder="Password...">
-
-      <button 
-        type="button" 
-        id="togglePassword">
-        ◉
-      </button>
-
-    </div>
-
-    <div id="accountMessage"></div>
-    <button id="accountActionBtn">
-      Create Account
-    </button>
+    <button onclick="submitPlayerId()">Submit</button>
 
   </div>
 </div>
@@ -184,35 +148,6 @@
 
     </div>
 </div>
-
-
-<div id="changeUsernamePopup" class="popup" style="display:none;">
-  <div class="popup-content">
-
-    <h2>Change Username</h2>
-
-    <input 
-      id="newUsername"
-      placeholder="New username..."
-      autocomplete="off">
-
-    <div id="usernameChangeMessage"></div>
-
-    <div class="username-buttons">
-
-      <button id="saveUsernameBtn">
-        Save
-      </button>
-
-      <button id="cancelUsernameBtn">
-        Cancel
-      </button>
-
-    </div>
-
-  </div>
-</div>
-
 
 <!-- Google Ad -->
 <div class="ad-container">
