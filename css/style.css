@@ -1850,14 +1850,6 @@ width:100%;
     text-overflow:clip;
 }
 
-.name-stat-header {
-  display: grid;
-  grid-template-columns: repeat(8, 1fr);
-  text-align: center;
-  width: 100%;
-  margin-bottom: 4px;
-}
-
 .name-stat-header span {
 
   font-size: 11px;
@@ -1866,25 +1858,35 @@ width:100%;
 }
 
 .name-stat-header {
+    display:grid;
 
-  padding:6px 4px 4px;
+    grid-template-columns:
+        1.4fr  /* DIV */
+        1fr    /* TEAM */
+        1fr    /* POS */
+        .75fr  /* BAT */
+        .75fr  /* THR */
+        1fr    /* DEBUT */
+        .8fr   /* AGE */
+        1fr;   /* BORN */
 
-  margin-bottom:4px;
+    gap:3px;
 
-  border-bottom:1px solid #ddd;
+    text-align:center;
+    width:100%;
 
-  font-size:11px;
+    padding:6px 4px 4px;
+    margin-top:35px;
+    margin-bottom:4px;
 
-  font-weight:700;
+    border-bottom:1px solid #ddd;
 
-  color:#777;
+    font-size:11px;
+    font-weight:700;
+    color:#777;
 
-  text-transform:uppercase;
+    text-transform:uppercase;
 }
-.name-stat-header {
-  margin-top: 35px;
-}
-
 @media(max-width:480px){
 
     .diamondle-row {
@@ -1915,6 +1917,18 @@ width:100%;
     .diamondle-stat {
 
         font-size:12px;
+
+    }
+
+}
+@media(max-width:480px){
+
+    .diamondle-stats,
+    .name-stat-header {
+
+        grid-template-columns:repeat(4,1fr);
+
+        gap:6px;
 
     }
 
