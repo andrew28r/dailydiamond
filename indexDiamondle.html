@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Daily Diamond</title>
+
+  <link rel="icon" type="image/png" href="./icon-192.png">
+  <link rel="apple-touch-icon" href="./icon-512.png">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="css/style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/database.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/indexDiamondle.js" defer></script>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+</head>
+
+
+<body>
+
+
+<div class="top-bar">
+
+
+  
+  <button class="icon-btn" id="backBtn">❮</button>
+
+  
+
+
+  <div class="title">
+
+    <img 
+      src="icon-192_alpha.png" 
+      class="header-logo">
+
+    <span>
+      Diamondle
+    </span>
+
+  </div>
+
+
+</div>
+
+
+
+<div class="container">
+
+<!--
+  <h3>
+    Diamondle
+  </h3>-->
+
+
+  <p>
+    Guess the mystery MLB player in 6 guesses.
+  </p>
+
+
+</div>
+
+
+
+<div class="last5games">
+
+<p id="streakDisplay"></p>
+  <button id="playBtn">
+    Play
+  </button>
+  <div class="last5-divider">
+</div>
+
+
+<h4>
+  Last 5 Days
+</h4>
+
+
+<div id="dayButtons" class="day-buttons"></div>
+
+
+<button 
+  id="calendarButton">
+
+  Previous Games
+
+</button>
+
+
+</div>
+
+
+
+
+<div id="calendarPopup" class="popup hidden">
+
+<div class="popup-content">
+
+
+<div class="calendar-header">
+
+
+<button 
+class="icon-btn"
+id="prevMonth">
+
+❮
+
+</button>
+
+
+<h2 id="calendarMonth"></h2>
+
+
+<button 
+class="icon-btn"
+id="nextMonth">
+
+❯
+
+</button>
+
+
+</div>
+
+
+<div id="calendarGrid"></div>
+
+
+<button id="closeCalendar">
+Close
+</button>
+
+
+</div>
+
+</div>
+
+
+
+
+<footer>
+
+<p>
+version alpha 0.5 | last updated 08/02/2026
+</p>
+
+</footer>
+
+
+
+</body>
+</html>

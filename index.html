@@ -83,14 +83,71 @@
 
 </div> <!-- top-bar -->
 
-<div class="container">
-  <p>The daily Baseball rankings guessing challenge.</p>
-  <p id="streakDisplay"></p>
-  <!--<button id="loginBtn">Login</button>-->
-  <!--<button id="playBtn">Play</button>-->
+<div class="hub-container">
+
+  <h2 class="hub-heading">
+    
+  </h2>
+
+  <!--
+  <div class="hub-card">
+
+    <div class="hub-content">
+
+      <h3 class="hub-title">
+        Daily Diamond
+      </h3>
+
+      <p class="hub-description">
+        Guess the daily MLB rankings challenge.
+      </p>
+
+      <div id="diamondStatus" class="hub-status hub-incomplete">
+        
+      </div>
+
+    </div>
+
+    <button class="hub-action" id="diamondResultsBtn">
+      Play
+    </button>
+
+  </div>-->
+
+
+
+  <div class="hub-card">
+
+    <div class="hub-content">
+
+      <h3 class="hub-title">
+        Diamondle
+      </h3>
+
+      <p class="hub-description">
+        Guess the hidden MLB player.
+      </p>
+
+      <div id="NewGameTag" class="hub-status hub-NewGame">
+          New Game
+      </div>
+      <div id="diamondleStatus" class="hub-status hub-incomplete">
+        
+      </div>
+
+    </div>
+
+    <button class="hub-action" id="diamondlePlayBtn">
+      Play
+    </button>
+
+  </div>
+
+
 </div>
 
 <div class="last5games">
+  <div id="streakDisplay"></div>
   
   <button id="playBtn">Play</button>
   <div class="last5-divider">
@@ -243,7 +300,7 @@ if (!isPWA()) {
 
 <footer>
 <p>
-version alpha 5.5 | last updated 07/31/2026
+version alpha 6.0 | last updated 08/02/2026
 </p>
 
 <!--<a href="about.html">About</a> |

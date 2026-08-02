@@ -1630,3 +1630,386 @@ width:100%;
   border-bottom:1px solid #ddd;
   margin:8px 4px 16px;
 }
+
+/* =========================
+   DIAMONDLE TYPOGRAPHY STYLE
+========================= */
+.diamondle-row {
+
+    background:white;
+
+    border-radius:12px;
+
+    padding:8px;
+
+    margin-bottom:6px;
+
+}
+
+
+.diamondle-name {
+
+    width:100%;
+
+    text-align:center;
+
+    font-size:16px;
+
+    font-weight:700;
+
+    color:#333;
+
+    margin-bottom:6px;
+
+}
+
+.diamondle-name {
+    font-size:14px;
+    font-weight:700;
+    text-align:left;
+    margin-bottom:6px;
+}
+
+
+.diamondle-stats {
+
+    display:grid;
+
+    grid-template-columns:repeat(6, minmax(0,1fr));
+
+    gap:3px;
+
+}
+
+
+.diamondle-stat {
+
+    border-radius:8px;
+
+    padding:6px 2px;
+
+    text-align:center;
+
+    font-weight:700;
+
+    font-size:12px;
+
+    min-width:0;
+
+}
+
+
+.diamondle-stat span {
+
+    display:block;
+
+    font-size:8px;
+
+    color:#777;
+
+    margin-bottom:2px;
+
+}
+
+.diamondle-row {
+    padding:8px 10px;
+    border-radius:12px;
+    margin-bottom:8px;
+}
+
+
+.diamondle-stat {
+    padding:5px 2px;
+    border-radius:8px;
+    font-size:11px;
+}
+
+
+.diamondle-stat span {
+    font-size:8px;
+}
+
+@media(max-width:480px){
+
+    .diamondle-row {
+
+        font-size:14px;
+
+        padding:8px;
+
+    }
+
+
+    .diamondle-name {
+
+        font-size:15px;
+
+    }
+
+
+    .diamondle-stats {
+
+        grid-template-columns:repeat(3,1fr);
+
+        gap:6px;
+
+    }
+
+
+    .diamondle-stat {
+
+        font-size:12px;
+
+    }
+
+}
+
+/* Diamondle colors only */
+
+.diamondle-stat.green {
+    background:#dcfce7;
+    color:#166534;
+}
+
+
+.diamondle-stat.yellow {
+    background:#fef3c7;
+    color:#92400e;
+}
+
+
+.diamondle-stat.red {
+    background:#fee2e2;
+    color:#991b1b;
+}
+
+
+.diamondle-stat.gray {
+    background:#e5e7eb;
+    color:#374151;
+}
+.diamondle-stat {
+
+    text-align:center;
+
+    font-weight:700;
+
+    font-size:12px;
+
+    min-width:0;
+
+    border-radius:10px;
+
+    padding:8px 3px;
+
+}
+
+.share-preview {
+    text-align: center;
+    white-space: pre-line;
+    font-size: 16px;
+    line-height: 1.5;
+}
+
+.share-preview pre {
+    font-family: Arial, sans-serif;
+    font-size: 20px;
+    margin: 12px 0;
+}
+
+.share-grid {
+    font-family: Arial, sans-serif;
+    font-size: 22px;
+    line-height: 1.4;
+    text-align: center;
+    margin: 10px auto;
+    display: block;
+    width: fit-content;
+    padding: 0;
+}
+
+.guess-total {
+  margin-left: 2px;
+  font-weight: 700;
+}
+/* =========================
+   GAME HUB
+========================= */
+
+.hub-NewGame {
+    background: #1d428a;
+    color: white;
+    font-weight: 700;
+    border-radius: 8px;
+    padding: 6px 14px;
+    display: inline-block;
+    font-size: 14px;
+    margin-top: 8px;
+}
+
+.hub-container {
+
+    width:100%;
+    max-width:300px;
+
+    margin:20px auto;
+
+}
+
+
+.hub-heading {
+
+    font-size:18px;
+
+    font-weight:800;
+
+    margin:0 0 12px;
+
+    text-align:left;
+
+}
+
+
+
+.hub-card {
+
+    display:flex;
+
+    align-items:center;
+
+    background:white;
+
+    border-radius:14px;
+
+    padding:12px;
+
+    margin-bottom:12px;
+
+    box-shadow:0 3px 8px rgba(0,0,0,.12);
+
+}
+
+
+
+.hub-logo {
+
+    width:42px;
+
+    height:42px;
+
+    object-fit:contain;
+
+    flex-shrink:0;
+
+    margin-right:12px;
+
+}
+
+
+
+.hub-content {
+
+    flex:1;
+
+    text-align:left;
+
+}
+
+
+
+.hub-title {
+
+    margin:0;
+
+    font-size:17px;
+
+    font-weight:800;
+
+    line-height:1.1;
+
+}
+
+
+
+.hub-description {
+
+    margin:2px 0 6px;
+
+    font-size:13px;
+
+    color:#777;
+
+}
+
+
+
+.hub-status {
+
+    display:inline-block;
+
+    font-size:12px;
+
+    font-weight:700;
+
+    padding:3px 8px;
+
+    border-radius:8px;
+
+}
+
+
+
+
+.hub-action {
+
+    width:80px;
+
+    padding:8px;
+
+    font-size:13px;
+
+    min-height:34px;
+
+    border-radius:8px;
+
+}
+
+
+.hub-status.completed {
+    background: #28a745;
+    color: white;
+}
+
+.hub-status.failed {
+    background: #dc3545;
+    color: white;
+}
+
+.hub-status.incomplete {
+    background: #ffc107;
+    color: #333;
+}
+
+.hub-status.notStarted {
+    background: #e9ecef;
+    color: #555;
+}
+
+.answer-text {
+    line-height: 1.1;
+    margin-bottom: 20px
+}
+
+.answer-text div {
+    margin: 0;;
+}
+
+.answer-text strong {
+    display: block;
+    margin-top: 10px;
+
+}
+
+#streakDisplay:empty {
+    display: none;
+}

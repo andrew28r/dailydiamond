@@ -262,6 +262,8 @@ async function submitPlayerId() {
 
       loadDayButtons();
       loadPlayerStreak();
+
+loadGameHub();
       
     };
 
@@ -1069,6 +1071,8 @@ accountActionBtn.addEventListener("click", async () => {
           updateMenuPlayerId();
           updateLoginButton();
 
+          loadGameHub();
+
           return;
       }
 
@@ -1157,6 +1161,8 @@ async function createAccount(username,password){
   updateMenuPlayerId();
   updateLoginButton();
 
+  loadGameHub();
+
 }
 
 async function loginAccount(username,password){
@@ -1202,6 +1208,8 @@ async function loginAccount(username,password){
   loadPlayerStreak();
   loadDayButtons();
 
+  loadGameHub();
+
 }
 
 async function upgradeGuestAccount(username,password){
@@ -1239,6 +1247,8 @@ async function upgradeGuestAccount(username,password){
   updateLoginButton();
   loadPlayerStreak();
   loadDayButtons();
+
+  loadGameHub();
 
 
   console.log("Guest upgraded:", data);
@@ -1388,6 +1398,8 @@ async function changeUsername(newUsername) {
   loadDayButtons();
   loadPlayerStreak();
 
+loadGameHub();
+
 
   document.getElementById("changeUsernamePopup").style.display = "none";
 
@@ -1420,5 +1432,134 @@ togglePassword.addEventListener("click", () => {
     togglePassword.textContent = "◉";
 
   }
+
+});
+
+
+async function loadGameHub(){
+
+    const today = getEasternDateString();
+    const playerId = localStorage.getItem("playerId");
+
+    if(!playerId){
+        return;
+    }
+
+
+    const { data: diamondGame, error: diamondError } = await db
+        .from("playerGames")
+        .select("*")
+        .eq("playerId", playerId)
+        .eq("date", today)
+        .maybeSingle();
+
+
+    if(diamondError){
+        console.log("Diamond error:", diamondError);
+    }
+
+
+
+    const { data: diamondleGame, error: diamondleError } = await db
+        .from("diamondlePlayerGames")
+        .select("*")
+        .eq("playerId", playerId)
+        .eq("date", today)
+        .maybeSingle();
+
+
+    if(diamondleError){
+        console.log("Diamondle error:", diamondleError);
+    }
+
+
+/*
+    updateHubStatus(
+        "diamondStatus",
+        diamondGame
+    );*/
+
+
+    updateHubStatus(
+        "diamondleStatus",
+        diamondleGame
+    );
+
+}
+
+function updateHubStatus(elementId, game){
+
+    const element = document.getElementById(elementId);
+
+    if(!element) return;
+
+
+    element.classList.remove(
+        "completed",
+        "failed",
+        "incomplete",
+        "notStarted"
+    );
+
+
+    // Not played
+    if(!game){
+
+        element.textContent = "Not Played";
+        element.classList.add("notStarted");
+        return;
+
+    }
+
+
+    // Won
+    if(game.win === true || game.win === "true"){
+
+        element.textContent = "Won";
+        element.classList.add("completed");
+        return;
+
+    }
+
+
+    // Lost / Give up
+    if(game.completed === true || game.completed === "true"){
+
+        element.textContent = "Lost";
+        element.classList.add("failed");
+        return;
+
+    }
+
+
+    // Started but unfinished
+    element.textContent = "Started";
+    element.classList.add("incomplete");
+
+}
+
+window.addEventListener("load", async () => {
+
+    const playerId = localStorage.getItem("playerId");
+
+    if(playerId){
+        await loadGameHub();
+    }
+
+});
+
+/*
+document.getElementById("diamondResultsBtn")
+.addEventListener("click", () => {
+
+    window.location.href = "indexGuess5.html";
+
+});
+*/
+
+document.getElementById("diamondlePlayBtn")
+.addEventListener("click", () => {
+
+    window.location.href = "indexDiamondle.html";
 
 });

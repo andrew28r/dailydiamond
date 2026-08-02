@@ -40,6 +40,39 @@ async function searchPlayers(query) {
 }
 
 
+async function searchMLBPlayers(query) {
+
+  const q = query.trim();
+
+  if (q.length < 2) {
+    return [];
+  }
+
+
+  try {
+
+    const res = await fetch(
+      `${MLB_API}/people/search?names=${encodeURIComponent(q)}`
+    );
+
+    const data = await res.json();
+
+
+    return (data.people || [])
+      .map(p => ({
+        name: p.fullName,
+        id: p.id
+      }))
+      .slice(0,8);
+
+
+  } catch(err){
+
+    console.error("Player search failed:", err);
+
+    return [];
+  }
+}
 
 
 /* =========================
@@ -67,7 +100,6 @@ async function validatePlayerName(name){
   ) || null;
 
 }
-
 
 
 
@@ -194,6 +226,7 @@ function getHeadshot(playerId){
 // Make available everywhere
 
 window.searchPlayers = searchPlayers;
+window.searchMLBPlayers = searchMLBPlayers;
 window.validatePlayerName = validatePlayerName;
 window.fetchLeaderboard = fetchLeaderboard;
 window.getHeadshot = getHeadshot;

@@ -201,6 +201,202 @@ function getEasternDateString(){
 
 
 
+async function diamondlePlayerGames(date) {
+
+  const playerId = localStorage.getItem("playerId");
+
+  if (!playerId) return null;
+
+
+  const { data, error } = await db
+    .from("diamondlePlayerGames")
+    .select("*")
+    .eq("playerId", playerId)
+    .eq("date", date)
+    .maybeSingle();
+
+
+  if (error) {
+    console.error(error);
+    return null;
+  }
+
+
+  return data;
+}
+
+/* =========================
+   DIAMONDLE PLAYER DATA
+========================= */
+
+async function createDiamondlePlayer(playerId) {
+
+  const { data: existingPlayer, error: checkError } = await db
+    .from("diamondlePlayerData")
+    .select("*")
+    .eq("playerId", playerId)
+    .maybeSingle();
+
+
+  if (checkError) {
+    console.error(checkError);
+    return;
+  }
+
+
+  if (existingPlayer) {
+    return existingPlayer;
+  }
+
+
+  const { data, error } = await db
+    .from("diamondlePlayerData")
+    .insert([
+      {
+        playerId,
+        gamesPlayed: 0,
+        wins: 0,
+        streak: 0
+      }
+    ])
+    .select()
+    .single();
+
+
+  if (error) {
+    console.error(error);
+    return;
+  }
+
+
+  return data;
+}
+
+
+
+/* =========================
+   DIAMONDLE PLAYER GAMES
+========================= */
+
+async function diamondlePlayerGames(date) {
+
+  const playerId = localStorage.getItem("playerId");
+
+  if (!playerId) return null;
+
+
+  const { data, error } = await db
+    .from("diamondlePlayerGames")
+    .select("*")
+    .eq("playerId", playerId)
+    .eq("date", date)
+    .maybeSingle();
+
+
+  if (error) {
+    console.error(error);
+    return null;
+  }
+
+
+  return data;
+}
+
+
+
+/* =========================
+   UPDATE DIAMONDLE STATS
+========================= */
+
+async function updateDiamondleGamesPlayed(playerId) {
+
+  const { data: games, error } = await db
+    .from("diamondlePlayerGames")
+    .select("*")
+    .eq("playerId", playerId)
+    .order("date", {ascending:false});
+
+
+  if (error) {
+    console.error(error);
+    return;
+  }
+
+
+  let gamesPlayed = games.length;
+
+
+  let wins = games.filter(
+    g =>
+      g.win === true ||
+      g.win === "true"
+  ).length;
+
+
+  let streak = 0;
+
+  let expectedDate = getEasternDateString();
+
+
+  for(let i = 0; i < 100; i++) {
+
+
+    const dayGame = games.find(
+      g => g.date === expectedDate
+    );
+
+
+    if(!dayGame)
+      break;
+
+
+    const completed =
+      dayGame.completed === true ||
+      dayGame.completed === "true";
+
+
+    const win =
+      dayGame.win === true ||
+      dayGame.win === "true";
+
+
+    if(!completed || !win)
+      break;
+
+
+    streak++;
+
+
+    const d =
+      new Date(expectedDate + "T00:00:00");
+
+
+    d.setDate(
+      d.getDate() - 1
+    );
+
+
+    expectedDate =
+      d.toISOString().split("T")[0];
+
+  }
+
+
+
+  await db
+    .from("diamondlePlayerData")
+    .update({
+      gamesPlayed,
+      wins,
+      streak
+    })
+    .eq("playerId", playerId);
+
+}
+
+window.createDiamondlePlayer = createDiamondlePlayer;
+window.diamondlePlayerGames = diamondlePlayerGames;
+window.updateDiamondleGamesPlayed = updateDiamondleGamesPlayed;
 window.db = db;
 window.createPlayer = createPlayer;
 window.playerGames = playerGames;
