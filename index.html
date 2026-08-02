@@ -116,7 +116,7 @@
 
 
 
-  <div class="hub-card" id="diamondleHubCard">
+  <div class="hub-card" id="diamondleHubCard" style="display:none;">
 
     <div class="hub-content">
 
@@ -293,11 +293,28 @@ function isPWA() {
   );
 }
 
+
+// Settings button only
 if (!isPWA()) {
   document.getElementById("settingsBtn").style.display = "none";
-
-  document.getElementById("diamondleHubCard").style.display = "none";
 }
+
+
+// Diamondle Hub only
+const diamondleAllowedPlayers = [
+  "andrew28r",
+  "Reed",
+  "Roach"
+];
+
+
+const currentPlayerId = localStorage.getItem("playerId");
+
+
+if (diamondleAllowedPlayers.includes(currentPlayerId)) {
+  document.getElementById("diamondleHubCard").style.display = "flex";
+}
+
 </script>
 
 <footer>
