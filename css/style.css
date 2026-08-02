@@ -1634,7 +1634,7 @@ width:100%;
 /* =========================
    DIAMONDLE TYPOGRAPHY STYLE
 ========================= */
-.diamondle-row {
+/*.diamondle-row {
 
     background:white;
 
@@ -1644,6 +1644,35 @@ width:100%;
 
     margin-bottom:6px;
 
+}
+*/
+
+.diamondle-header {
+    background: white;
+    border: 2px solid var(--border);
+    border-radius: 12px;
+
+    text-align: center;
+    font-size: 1.15rem;
+    font-weight: 700;
+
+    padding: 12px;
+    margin-bottom: 10px;
+
+    color: var(--text);
+
+    box-shadow: 0 2px 4px rgba(0,0,0,.05);
+}
+
+
+
+.diamondle-row {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+    margin-bottom: 16px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.08);
 }
 
 
@@ -1675,7 +1704,7 @@ width:100%;
 
     display:grid;
 
-    grid-template-columns:repeat(6, minmax(0,1fr));
+    grid-template-columns:repeat(8, minmax(0,1fr));
 
     gap:3px;
 
@@ -1729,6 +1758,133 @@ width:100%;
     font-size:8px;
 }
 
+
+.diamondle-stat {
+    padding: 3px 1px;
+    font-size: 10px;
+    line-height: 1;
+    overflow:visible;
+}
+
+.diamondle-stat span {
+    font-size: 7px;
+    line-height: 1;
+    margin-bottom: 1px;
+}
+
+.diamondle-stat strong {
+    display:block;
+    font-size:11px;
+    line-height:1.1;
+    white-space:nowrap;
+    overflow:visible;
+    text-overflow:clip;
+}
+.diamondle-stats {
+
+    display:grid;
+
+    grid-template-columns:repeat(8, minmax(0,1fr));
+
+    gap:3px;
+
+}
+.diamondle-stats {
+
+    display:grid;
+
+    grid-template-columns:repeat(8, minmax(0,1fr));
+
+    gap:4px;
+
+    width:100%;
+
+}
+
+
+.diamondle-stat {
+
+    border-radius:8px;
+
+    padding:6px 2px;
+
+    text-align:center;
+
+    font-weight:700;
+
+    font-size:11px;
+
+    line-height:1;
+
+    min-width:0;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+}
+.diamondle-stats {
+    display:grid;
+
+    grid-template-columns:
+        1.4fr  /* DIV */
+        1fr    /* TEAM */
+        1fr    /* POS */
+        .75fr  /* BAT */
+        .75fr  /* THR */
+        1fr    /* DEBUT */
+        .8fr   /* AGE */
+        1fr;   /* BORN */
+
+    gap:3px;
+}
+
+.diamondle-stat strong {
+    display:block;
+    font-size:11px;
+    line-height:1.1;
+    white-space:nowrap;
+    overflow:visible;
+    text-overflow:clip;
+}
+
+.name-stat-header {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  text-align: center;
+  width: 100%;
+  margin-bottom: 4px;
+}
+
+.name-stat-header span {
+
+  font-size: 11px;
+  font-weight: bold;
+  color: #777;
+}
+
+.name-stat-header {
+
+  padding:6px 4px 4px;
+
+  margin-bottom:4px;
+
+  border-bottom:1px solid #ddd;
+
+  font-size:11px;
+
+  font-weight:700;
+
+  color:#777;
+
+  text-transform:uppercase;
+}
+.name-stat-header {
+  margin-top: 35px;
+}
+
 @media(max-width:480px){
 
     .diamondle-row {
@@ -1749,7 +1905,7 @@ width:100%;
 
     .diamondle-stats {
 
-        grid-template-columns:repeat(3,1fr);
+        grid-template-columns:repeat(4,1fr);
 
         gap:6px;
 
@@ -1765,29 +1921,31 @@ width:100%;
 }
 
 /* Diamondle colors only */
-
-.diamondle-stat.green {
+.diamondle-stat.green,
+.diamondle-header.green {
     background:#dcfce7;
     color:#166534;
 }
 
-
-.diamondle-stat.yellow {
+.diamondle-stat.yellow,
+.diamondle-header.yellow {
     background:#fef3c7;
     color:#92400e;
 }
 
-
-.diamondle-stat.red {
+.diamondle-stat.red,
+.diamondle-header.red {
     background:#fee2e2;
     color:#991b1b;
 }
 
-
-.diamondle-stat.gray {
+.diamondle-stat.gray,
+.diamondle-header.gray {
     background:#e5e7eb;
     color:#374151;
 }
+
+
 .diamondle-stat {
 
     text-align:center;

@@ -44,11 +44,13 @@ function getGuessStats(){
     return guesses.reduce((stats,g)=>{
 
         if(g.positionColor === "green" &&
-           g.divisionColor === "green" &&
-           g.teamColor === "green" &&
-           g.batsColor === "green" &&
-           g.throwsColor === "green" &&
-           g.debutColor === "green"){
+            g.divisionColor === "green" &&
+            g.teamColor === "green" &&
+            g.batsColor === "green" &&
+            g.throwsColor === "green" &&
+            g.debutColor === "green" &&
+            g.ageColor === "green" &&
+            g.countryColor === "green"){
 
             stats.green++;
 
@@ -61,7 +63,9 @@ function getGuessStats(){
                 g.teamColor,
                 g.batsColor,
                 g.throwsColor,
-                g.debutColor
+                g.debutColor,
+                g.ageColor,
+                g.countryColor
             ];
 
             stats.green += colors.filter(c=>c==="green").length;
@@ -124,7 +128,9 @@ function getResultGrid(){
                 g.positionColor,
                 g.batsColor,
                 g.throwsColor,
-                g.debutColor
+                g.debutColor,
+                g.ageColor,
+                g.countryColor
             ];
 
             return colors.map(c => {
@@ -687,12 +693,16 @@ async function guessPlayer(){
             teamInfo
         );
 
+    const isCorrectPlayer =
+        String(fullPlayer.id) === String(gameInfoObj.id);    
 
     guesses.unshift({
 
         id:player.id,
 
         name:player.fullName,
+
+        correct: isCorrectPlayer,
 
 
         position:
@@ -739,6 +749,36 @@ async function guessPlayer(){
         debutColor:
             result.debut,
 
+        age:
+            fullPlayer.currentAge || "N/A",
+
+        ageColor:
+            (() => {
+
+                const diff =
+                    Math.abs(
+                        fullPlayer.currentAge - gameInfoObj.currentAge
+                    );
+
+                if(diff === 0)
+                    return "green";
+
+                if(diff <= 3)
+                    return "yellow";
+
+                return "red";
+
+            })(),
+
+
+        country:
+            fullPlayer.birthCountry || "N/A",
+
+        countryColor:
+            fullPlayer.birthCountry === gameInfoObj.birthCountry
+            ? "green"
+            : "red",
+
     });
 
 
@@ -749,7 +789,7 @@ async function guessPlayer(){
     document.getElementById(
         "guessNumber"
     ).textContent =
-        `${guesses.length}/6`;
+        `${guesses.length}/9`;
 
 
 
@@ -757,7 +797,7 @@ async function guessPlayer(){
 
     checkWin();
 
-    if(!gameLocked && guesses.length >= 6){
+    if(!gameLocked && guesses.length >= 9){
 
         gameOutcome = "lose";
 
@@ -972,7 +1012,7 @@ function comparePlayer(guess, answer, guessTeam){
                 return "green";
 
 
-            if (Math.abs(guessYear - answerYear) === 1)
+            if (Math.abs(guessYear - answerYear) === 3)
                 return "yellow";
 
 
@@ -1000,55 +1040,77 @@ RENDER
 =========================
 */
 
-function render(){
+function render() {
 
     board.innerHTML = "";
 
-    guesses.forEach(g=>{
+    guesses.forEach(g => {
 
         const row = document.createElement("div");
-
         row.className = "diamondle-row";
+
+        let headerColor = "gray";
+
+        const allGreen =
+            g.positionColor === "green" &&
+            g.divisionColor === "green" &&
+            g.teamColor === "green" &&
+            g.batsColor === "green" &&
+            g.throwsColor === "green" &&
+            g.debutColor === "green" &&
+            g.ageColor === "green" &&
+            g.countryColor === "green";
+
+
+        if (g.correct && allGreen) {
+            headerColor = "green";
+        }
+        else if (!g.correct && allGreen) {
+            headerColor = "yellow";
+        }
 
         row.innerHTML = `
 
-        <div class="diamondle-name">
-            ${g.name}
-        </div>
-
-        <div class="diamondle-stats">
-
-            <div class="diamondle-stat ${g.divisionColor}">
-                <span>DIV</span>
-                <strong>${g.division}</strong>
+            <div class="diamondle-name">
+                ${g.name}
             </div>
 
-            <div class="diamondle-stat ${g.teamColor}">
-                <span>TEAM</span>
-                <strong>${g.team}</strong>
-            </div>
 
-            <div class="diamondle-stat ${g.positionColor}">
-                <span>POS</span>
-                <strong>${g.position}</strong>
-            </div>
+            <div class="diamondle-stats">
 
-            <div class="diamondle-stat ${g.batsColor}">
-                <span>BAT</span>
-                <strong>${g.bats}</strong>
-            </div>
+                <div class="diamondle-stat ${g.divisionColor}">
+                    <strong>${g.division}</strong>
+                </div>
 
-            <div class="diamondle-stat ${g.throwsColor}">
-                <span>THR</span>
-                <strong>${g.throws}</strong>
-            </div>
+                <div class="diamondle-stat ${g.teamColor}">
+                    <strong>${g.team}</strong>
+                </div>
 
-            <div class="diamondle-stat ${g.debutColor}">
-                <span>DEB</span>
-                <strong>${g.debut}</strong>
-            </div>
+                <div class="diamondle-stat ${g.positionColor}">
+                    <strong>${g.position}</strong>
+                </div>
 
-        </div>
+                <div class="diamondle-stat ${g.batsColor}">
+                    <strong>${g.bats}</strong>
+                </div>
+
+                <div class="diamondle-stat ${g.throwsColor}">
+                    <strong>${g.throws}</strong>
+                </div>
+
+                <div class="diamondle-stat ${g.debutColor}">
+                    <strong>${g.debut}</strong>
+                </div>
+
+                <div class="diamondle-stat ${g.ageColor}">
+                    <strong>${g.age}</strong>
+                </div>
+
+                <div class="diamondle-stat ${g.countryColor}">
+                    <strong>${getCountryAbbreviation(g.country)}</strong>
+                </div>
+
+            </div>
 
         `;
 
@@ -1057,7 +1119,6 @@ function render(){
     });
 
 }
-
 
 
 
@@ -1203,7 +1264,9 @@ function getShareGrid(){
             g.positionColor,
             g.batsColor,
             g.throwsColor,
-            g.debutColor
+            g.debutColor,
+            g.ageColor,
+            g.countryColor
         ];
 
         colors.forEach(color => {
@@ -1263,7 +1326,9 @@ function getColorGrid(){
             g.positionColor,
             g.batsColor,
             g.throwsColor,
-            g.debutColor
+            g.debutColor,
+            g.ageColor,
+            g.countryColor
         ];
 
 
@@ -1344,7 +1409,7 @@ START GAME
         document.getElementById(
             "guessNumber"
         ).textContent =
-            `${guesses.length}/6`;
+            `${guesses.length}/9`;
 
 
 
@@ -1370,3 +1435,76 @@ START GAME
 
 
 })();
+
+document.getElementById("nameStatHeader").innerHTML = `
+  <span>DIV</span>
+  <span>TEAM</span>
+  <span>POS</span>
+  <span>BAT</span>
+  <span>THR</span>
+  <span>DEBUT</span>
+  <span>AGE</span>
+  <span>BORN</span>
+`;
+
+
+const countryCodes = {
+
+    "United States": "USA",
+    "Dominican Republic": "DOM",
+    "Venezuela": "VEN",
+    "Puerto Rico": "PRI",
+    "Cuba": "CUB",
+    "Mexico": "MEX",
+    "Canada": "CAN",
+    "Japan": "JPN",
+    "South Korea": "KOR",
+    "Taiwan": "TWN",
+    "Colombia": "COL",
+    "Australia": "AUS",
+    "Netherlands": "NED",
+    "Curacao": "CUW",
+    "Panama": "PAN",
+    "Nicaragua": "NIC",
+    "Brazil": "BRA",
+    "Germany": "GER",
+    "Italy": "ITA",
+    "Spain": "ESP",
+    "France": "FRA",
+    "South Africa": "RSA",
+    "Aruba": "ARU",
+    "Bahamas": "BAH",
+    "Belize": "BLZ",
+    "Honduras": "HON",
+    "Guatemala": "GUA",
+    "Chile": "CHI",
+    "Peru": "PER",
+    "Poland": "POL",
+    "Sweden": "SWE",
+    "Czech Republic": "CZE",
+    "Czechia": "CZE",
+    "United Kingdom": "GBR",
+    "Ireland": "IRL",
+    "Austria": "AUT",
+    "Belgium": "BEL",
+    "Switzerland": "SUI",
+    "Russia": "RUS",
+    "Ukraine": "UKR",
+    "Lithuania": "LTU",
+    "Croatia": "CRO",
+    "Serbia": "SRB",
+    "Israel": "ISR"
+
+};
+
+
+function getCountryAbbreviation(country){
+
+    if(!country)
+        return "N/A";
+
+
+    return countryCodes[country] || 
+        country.substring(0,3).toUpperCase();
+
+}
