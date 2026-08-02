@@ -674,7 +674,9 @@ async function guessPlayer(){
 
     const fullPlayer =
         fullPlayerData.people[0];
-
+            
+    const pitcherRole =
+        await getPitcherRole(fullPlayer.id);
 
     const teamRes = await fetch(
         `${MLB_API}/teams/${fullPlayer.currentTeam.id}`
@@ -706,8 +708,10 @@ async function guessPlayer(){
 
 
         position:
-            fullPlayer.primaryPosition?.abbreviation || "N/A",
-            
+            fullPlayer.primaryPosition?.abbreviation === "P"
+                ? pitcherRole
+                : fullPlayer.primaryPosition?.abbreviation || "N/A",
+                
         positionColor:
             result.position,
 
@@ -907,12 +911,22 @@ function comparePlayer(guess, answer, guessTeam){
         (() => {
 
             const guessPos =
-                guess.primaryPosition?.abbreviation;
+                guess.pitcherRole || guess.primaryPosition?.abbreviation;
 
             const answerPos =
-                answer.primaryPosition?.abbreviation;
+                answer.pitcherRole || answer.primaryPosition?.abbreviation;
 
+            const pitchers = [
+                "SP",
+                "RP"
+            ];
 
+            if(
+                pitchers.includes(guessPos) &&
+                pitchers.includes(answerPos)
+            )
+                return "yellow";
+                
             // Exact position
             if (guessPos === answerPos)
                 return "green";
@@ -1012,7 +1026,7 @@ function comparePlayer(guess, answer, guessTeam){
                 return "green";
 
 
-            if (Math.abs(guessYear - answerYear) === 3)
+            if (Math.abs(guessYear - answerYear) <= 3)
                 return "yellow";
 
 
@@ -1506,5 +1520,43 @@ function getCountryAbbreviation(country){
 
     return countryCodes[country] || 
         country.substring(0,3).toUpperCase();
+
+}
+
+async function getPitcherRole(playerId){
+
+    const res = await fetch(
+        `${MLB_API}/people/${playerId}/stats?stats=season&group=pitching`
+    );
+
+    const data = await res.json();
+
+    const splits =
+        data.stats?.[0]?.splits?.[0];
+
+    if(!splits)
+        return "P";
+
+
+    const stats = splits.stat;
+
+
+    const games =
+        stats.gamesPlayed || 0;
+
+    const starts =
+        stats.gamesStarted || 0;
+
+
+    if(games === 0)
+        return "P";
+
+
+    // More than half appearances as starts
+    if(starts / games >= 0.5)
+        return "SP";
+
+
+    return "RP";
 
 }
