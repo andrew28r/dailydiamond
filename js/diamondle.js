@@ -492,7 +492,7 @@ function renderDropdown(){
 
     if(matches.length === 0){
 
-        dropdown.style.display="none";
+        dropdown.style.display = "none";
         return;
 
     }
@@ -502,11 +502,9 @@ function renderDropdown(){
     matches.forEach((player,index)=>{
 
 
-        const div =
-            document.createElement("div");
+        const div = document.createElement("div");
 
-
-        div.className="item";
+        div.className = "diamondle-dropdown-item";
 
 
         if(index === activeIndex){
@@ -515,15 +513,12 @@ function renderDropdown(){
 
 
 
-        const img =
-            document.createElement("img");
+        // Headshot
+        const img = document.createElement("img");
 
-        img.src =
-            getHeadshot(player.id);
+        img.src = getHeadshot(player.id);
 
-        img.className =
-            "dropdown-headshot";
-
+        img.className = "diamondle-dropdown-headshot";
 
 
         img.onerror = () => {
@@ -535,30 +530,90 @@ function renderDropdown(){
 
 
 
-        const span =
-            document.createElement("span");
+        // Top row info container
+        const info = document.createElement("div");
+
+        info.className = "diamondle-dropdown-info";
 
 
-        span.textContent =
-            player.name;
+
+        // Player name
+        const name = document.createElement("div");
+
+        name.className = "diamondle-dropdown-name";
+
+        name.textContent =
+            player.fullName || player.name;
+
+
+
+        info.appendChild(name);
+
+
+
+        // Stats full width row
+        const stats = document.createElement("div");
+
+        stats.className = "diamondle-dropdown-stats";
+
+
+        stats.innerHTML = `
+
+            <div class="diamondle-dropdown-stat">
+                ${player.division || "N/A"}
+            </div>
+
+            <div class="diamondle-dropdown-stat">
+                ${player.team || "N/A"}
+            </div>
+
+            <div class="diamondle-dropdown-stat">
+                ${player.position || "N/A"}
+            </div>
+
+            <div class="diamondle-dropdown-stat">
+                ${player.bats || "N/A"}
+            </div>
+
+            <div class="diamondle-dropdown-stat">
+                ${player.throws || "N/A"}
+            </div>
+
+            <div class="diamondle-dropdown-stat">
+                ${player.debut || "N/A"}
+            </div>
+
+            <div class="diamondle-dropdown-stat">
+                ${player.age || "N/A"}
+            </div>
+
+            <div class="diamondle-dropdown-stat">
+                ${getCountryAbbreviation(player.country)}
+            </div>
+
+        `;
 
 
 
         div.appendChild(img);
-        div.appendChild(span);
+
+        div.appendChild(info);
+
+        div.appendChild(stats);
 
 
 
         div.onclick = () => {
 
             input.value =
-                player.name;
+                player.fullName || player.name;
 
-            dropdown.style.display="none";
+            dropdown.style.display = "none";
 
             guessPlayer();
 
         };
+
 
 
         dropdown.appendChild(div);
@@ -568,10 +623,9 @@ function renderDropdown(){
 
 
 
-    dropdown.style.display="block";
+    dropdown.style.display = "block";
 
 }
-
 
 
 
@@ -800,6 +854,8 @@ async function guessPlayer(){
     await saveGame();
 
     checkWin();
+    //updateStatHeader();
+    updateHowTo();
 
     if(!gameLocked && guesses.length >= 9){
 
@@ -1403,6 +1459,10 @@ START GAME
 
         await loadPlayerGame();
 
+        //updateStatHeader();
+        updateHowTo();
+
+
         if(gameLocked){
 
             applyLockUI();
@@ -1560,3 +1620,38 @@ async function getPitcherRole(playerId){
     return "RP";
 
 }
+
+function updateHowTo() {
+
+  //const howTo = document.getElementById("howTo");
+
+  if (guesses.length === 0) {
+    openHowTo();
+  } else {
+    closeHowTo();
+  }
+
+}
+
+function openHowTo() {
+  document.getElementById("howtoPopup").style.display = "block";
+}
+
+function closeHowTo() {
+  document.getElementById("howtoPopup").style.display = "none";
+}
+
+/*
+function updateStatHeader() {
+
+  const statHeader =
+    document.getElementById("nameStatHeader");
+
+  if (guesses.length === 0) {
+    statHeader.stylde.display = "none";
+  } 
+  else {
+    statHeader.style.display = "grid";
+  }
+
+}*/

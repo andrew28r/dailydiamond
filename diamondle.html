@@ -46,19 +46,67 @@
           <span class="guess-label">Guesses:</span>
           <span id="guessNumber" class="guess-number">0/9</span>
         </div>
+        
 
       </div>
 
     </div>
 
     <input id="search" placeholder="Guess a player..." autocomplete="off">
-    <div id="dropdown" class="dropdown"></div>
+
     <div class="hint-message">
-        <div id="message" class="message"></div>
-        <div id="hint"></div>
+          <div id="message" class="message"></div>
+          <div id="hint"></div>
     </div>
+
+    <div id="dropdown" class="diamondle-dropdown"></div>
+    
   </div>
 
+  <div id="howtoPopup" class="howto-popup">
+
+    <h3>How to Play</h3>
+
+    <p>
+      Guess the mystery <strong>MLB player</strong> in 9 guesses.
+    </p>
+
+    <br>
+
+    <h3>Clues</h3>
+
+    <p>
+      🟩 <strong>Green:</strong> Exact match
+    </p>
+
+    <p>
+      🟨 <strong>Yellow:</strong> Close match
+    </p>
+
+    <p>
+      🟥 <strong>Red:</strong> No match
+    </p>
+
+    <br>
+
+    <p>
+      <strong>Position:</strong> LF/CF/RF, 1B/2B/3B/SS, and SP/RP are grouped as similar.
+    </p>
+
+    <p>
+      <strong>Age & Debut:</strong> Within 3 years counts as close.
+    </p>
+
+    <p>
+      <strong>Division:</strong> Same division matches, same league is close.
+    </p>
+
+    <p>
+      <strong>Team, Bat, Throw & Birthplace:</strong> Must match exact.
+    </p>
+    <button onclick="closeHowTo()">Close</button>
+
+  </div>
 
   <div id="winPopup" class="result-card" style="display:none;">
 
@@ -78,11 +126,12 @@
       View Leaderboard
     </button>-->
 
+
   </div>
 
   <div id="nameStatHeader" class="name-stat-header"></div>
 
-  <div id="lastGuess" class="board"></div>
+  <!--<div id="lastGuess" class="board"></div>-->
   <div id="board" class="board"></div>
 </div>
 

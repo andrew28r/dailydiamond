@@ -39,7 +39,7 @@ async function searchPlayers(query) {
   }
 }
 
-
+/*
 async function searchMLBPlayers(query) {
 
   const q = query.trim();
@@ -72,6 +72,90 @@ async function searchMLBPlayers(query) {
 
     return [];
   }
+}*/
+
+async function searchMLBPlayers(query) {
+
+    const q = query.trim();
+
+    if (q.length < 2) {
+        return [];
+    }
+
+    try {
+
+        const res = await fetch(
+            `${MLB_API}/people/search?names=${encodeURIComponent(q)}`
+        );
+
+        const data = await res.json();
+
+        const players = (data.people || []).slice(0, 8);
+
+        const detailedPlayers = await Promise.all(
+
+            players.map(async p => {
+
+                try {
+
+                    const personRes = await fetch(
+                        `${MLB_API}/people/${p.id}?hydrate=currentTeam`
+                    );
+
+                    const personData = await personRes.json();
+                    const person = personData.people[0];
+
+                    const role = await getPitcherRole(person.id);
+
+                    const teamRes = await fetch(
+                        `${MLB_API}/teams/${person.currentTeam.id}`
+                    );
+
+                    const teamData = await teamRes.json();
+                    const team = teamData.teams[0];
+
+                    return {
+                        id: person.id,
+                        name: person.fullName,
+
+                        division: getDivisionShortName(team.division?.name),
+                        team: team.abbreviation,
+
+                        position:
+                            person.primaryPosition?.abbreviation === "P"
+                                ? role
+                                : person.primaryPosition?.abbreviation,
+
+                        bats: person.batSide?.code,
+                        throws: person.pitchHand?.code,
+                        debut: person.mlbDebutDate?.substring(0, 4),
+                        age: person.currentAge,
+                        country: person.birthCountry
+
+                    };
+
+                } catch {
+
+                    return {
+                        id: p.id,
+                        name: p.fullName
+                    };
+
+                }
+
+            })
+
+        );
+
+        return detailedPlayers;
+
+    } catch (err) {
+
+        console.error("Player search failed:", err);
+        return [];
+
+    }
+
 }
 
 
