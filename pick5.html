@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<title>Pick5</title>
+
+<link rel="icon" type="image/png" href="./icon-192.png">
+<link rel="apple-touch-icon" href="./icon-512.png">
+
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+
+<link rel="stylesheet" href="css/style.css">
+
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script src="js/database.js"></script>
+<script src="js/api.js"></script>
+<script src="js/pick5Scoring.js"></script>
+
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+
+</head>
+
+
+<body>
+
+
+<div class="top-bar">
+
+
+<button 
+class="icon-btn" 
+id="backBtn">
+
+❮
+
+</button>
+
+
+
+<div class="title">
+
+
+<img
+src="icon-192_alpha.png"
+class="header-logo">
+
+
+<span>
+Pick5
+</span>
+
+
+</div>
+
+
+</div>
+
+
+
+
+
+
+<div class="container">
+
+
+
+<h3>
+Pick your lineup
+</h3>
+
+
+
+<div 
+class="game-date"
+id="gameDate">
+</div>
+
+
+
+
+
+<div class="pick5-section">
+
+
+<h3>
+Hitters
+</h3>
+
+
+
+<div 
+class="pick5-slot" 
+data-slot="hitter0">
+
+
+<div class="empty-slot">
+
++ Select Batter
+
+</div>
+
+
+</div>
+
+
+
+
+<div 
+class="pick5-slot" 
+data-slot="hitter1">
+
+
+<div class="empty-slot">
+
++ Select Batter
+
+</div>
+
+
+</div>
+
+
+
+
+<div 
+class="pick5-slot" 
+data-slot="hitter2">
+
+
+<div class="empty-slot">
+
++ Select Batter
+
+</div>
+
+
+</div>
+
+
+</div>
+
+
+
+
+
+
+
+
+<div class="pick5-section">
+
+
+<h3>
+Pitchers
+</h3>
+
+
+
+
+<div 
+class="pick5-slot" 
+data-slot="starter">
+
+
+<div class="empty-slot">
+
++ Select Starting Pitcher
+
+</div>
+
+
+</div>
+
+
+
+
+
+<div 
+class="pick5-slot" 
+data-slot="reliever">
+
+
+<div class="empty-slot">
+
++ Select Reliever
+
+</div>
+
+
+</div>
+
+
+
+</div>
+
+
+
+
+
+
+
+
+
+<div 
+id="scoreCard"
+class="score-card"
+style="display:none;">
+
+
+<h3>
+Today's Score
+</h3>
+
+
+<div id="score">
+
+0
+
+</div>
+
+
+</div>
+
+
+
+
+
+</div>
+
+
+
+
+<div class="leaderboard">
+
+    <h3>
+        Pick5 Leaderboard
+    </h3>
+
+
+    <div class="leaderboard-header">
+
+        <span>
+            #
+        </span>
+
+        <span>
+            Player
+        </span>
+
+        <span>
+            
+        </span>
+
+        <span>
+            Score
+        </span>
+
+    </div>
+
+
+    <div id="pick5Leaderboard">
+        Loading...
+    </div>
+
+
+</div>
+
+
+<!-- PICK5 PLAYER POPUP -->
+
+<div 
+id="pick5PlayerPopup"
+class="pick5-popup">
+
+
+<div 
+class="pick5-popup-content">
+
+
+
+
+
+
+
+
+
+
+<!-- GAME SELECTOR -->
+
+<div
+id="pick5GameCarousel"
+class="pick5-game-carousel">
+
+</div>
+
+
+
+
+
+
+<!-- TEAM SELECTOR -->
+<div class="pick5-team-buttons">
+
+
+<button 
+id="pick5AwayTab">
+
+Away
+
+</button>
+
+
+
+<button 
+id="pick5HomeTab">
+
+Home
+
+</button>
+
+
+</div>
+
+
+
+
+
+
+
+<!-- PLAYER LIST -->
+
+<div class="pick5-player-scroll">
+
+    <div id="pick5GamePlayers"></div>
+
+</div>
+
+
+
+<button 
+id="pick5ClosePopup"
+class="pick5-close">
+
+Close
+
+</button>
+
+</div>
+
+
+</div>
+
+
+
+
+
+
+
+
+
+<footer>
+
+<p>
+
+version alpha 0.1 | Pick5
+
+</p>
+
+</footer>
+
+
+
+
+
+
+
+<script src="js/pick5.js"></script>
+
+
+</body>
+
+</html>

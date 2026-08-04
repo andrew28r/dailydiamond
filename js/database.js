@@ -394,6 +394,179 @@ async function updateDiamondleGamesPlayed(playerId) {
 
 }
 
+
+/* =========================
+   PICK5 PLAYER DATA
+========================= */
+
+
+async function createPick5Player(playerId) {
+
+  const { data: existingPlayer, error: checkError } = await db
+    .from("pick5PlayerData")
+    .select("*")
+    .eq("playerId", playerId)
+    .maybeSingle();
+
+
+  if (checkError) {
+    console.error(checkError);
+    return;
+  }
+
+
+  if(existingPlayer){
+    return existingPlayer;
+  }
+
+
+  const { data, error } = await db
+    .from("pick5PlayerData")
+    .insert([
+      {
+        playerId,
+        gamesPlayed:0,
+        totalScore:0,
+        highScore:0,
+        wins:0,
+        streak:0
+      }
+    ])
+    .select()
+    .single();
+
+
+  if(error){
+    console.error(error);
+    return;
+  }
+
+
+  return data;
+
+}
+
+
+
+
+/* =========================
+   PICK5 PLAYER GAMES
+========================= */
+
+
+async function pick5PlayerGames(date){
+
+    const playerId =
+        localStorage.getItem("playerId");
+
+
+    if(!playerId)
+        return null;
+
+
+
+    const {data,error} =
+        await db
+        .from("pick5PlayerGames")
+        .select("*")
+        .eq("playerId",playerId)
+        .eq("date",date)
+        .maybeSingle();
+
+
+
+    if(error){
+        console.error(error);
+        return null;
+    }
+
+
+    return data;
+
+}
+
+
+
+
+/* =========================
+   UPDATE PICK5 STATS
+========================= */
+
+
+async function updatePick5PlayerData(playerId){
+
+
+    const {data:games,error} =
+        await db
+        .from("pick5PlayerGames")
+        .select("*")
+        .eq("playerId",playerId);
+
+
+
+    if(error){
+        console.error(error);
+        return;
+    }
+
+
+
+    let gamesPlayed =
+        games.length;
+
+
+
+    let totalScore =
+        games.reduce(
+            (sum,g)=>
+            sum + (g.score || 0),
+            0
+        );
+
+
+
+    let highScore =
+        Math.max(
+            ...games.map(
+                g=>g.score || 0
+            ),
+            0
+        );
+
+
+
+    let wins =
+        games.filter(
+            g=>g.score > 0
+        ).length;
+
+
+
+    await db
+    .from("pick5PlayerData")
+    .update({
+
+        gamesPlayed,
+        totalScore,
+        highScore,
+        wins
+
+    })
+    .eq("playerId",playerId);
+
+
+}
+
+
+window.createPick5Player =
+    createPick5Player;
+
+window.pick5PlayerGames =
+    pick5PlayerGames;
+
+window.updatePick5PlayerData =
+    updatePick5PlayerData;
+
 window.createDiamondlePlayer = createDiamondlePlayer;
 window.diamondlePlayerGames = diamondlePlayerGames;
 window.updateDiamondleGamesPlayed = updateDiamondleGamesPlayed;

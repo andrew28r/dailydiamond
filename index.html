@@ -143,6 +143,34 @@
 
   </div>
 
+  <div class="hub-card" id="pick5HubCard" style="display:none;">
+
+  <div class="hub-content">
+
+    <h3 class="hub-title">
+      Pick5
+    </h3>
+
+    <p class="hub-description">
+      Pick your MLB lineup and score points.
+    </p>
+    
+      <div id="NewGameTag" class="hub-status hub-NewGame">
+          New Game
+      </div>
+
+    <div id="pick5Status" class="hub-status hub-incomplete">
+      
+    </div>
+
+  </div>
+
+  <button class="hub-action" id="pick5PlayBtn">
+    Play
+  </button>
+
+</div>
+
 
 </div>
 
@@ -286,9 +314,10 @@
 </script>
 
 <script>
+
 function isPWA() {
   return (
-    window.matchMedia("(display-mode: standalone)").matches ||
+    window.matchMedia("(display-mode=standalone)").matches ||
     window.navigator.standalone === true
   );
 }
@@ -300,21 +329,70 @@ if (!isPWA()) {
 }
 
 
-// Diamondle Hub only
-const diamondleAllowedPlayers = [
-  "andrew28r",
-  "Reed",
-  "Roach",
-  "Kelly"
-];
-
-
+// Current logged in player
 const currentPlayerId = localStorage.getItem("playerId");
 
 
-if (diamondleAllowedPlayers.includes(currentPlayerId)) {
-  document.getElementById("diamondleHubCard").style.display = "flex";
+
+// =====================
+// DIAMONDLE ACCESS
+// =====================
+
+// Everyone can play Diamondle
+
+document
+.getElementById("diamondleHubCard")
+.style.display = "flex";
+
+
+
+
+// =====================
+// PICK5 ACCESS
+// =====================
+
+const pick5AllowedPlayers = [
+  "andrew28r"
+];
+
+
+if(
+    pick5AllowedPlayers.includes(currentPlayerId)
+){
+
+    document
+    .getElementById("pick5HubCard")
+    .style.display = "flex";
+
 }
+
+
+
+
+// =====================
+// BUTTONS
+// =====================
+
+
+document
+.getElementById("diamondlePlayBtn")
+.onclick = ()=>{
+
+    window.location.href="diamondle.html";
+
+};
+
+
+
+document
+.getElementById("pick5PlayBtn")
+.onclick = ()=>{
+
+    window.location.href="pick5.html";
+
+};
+
+
 
 </script>
 
