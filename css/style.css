@@ -2557,6 +2557,10 @@ width:100%;
 
 
 
+.pick5-game-card.locked{
+    opacity:0.55;
+    cursor:not-allowed;
+}
 
 .pick5-close {
 

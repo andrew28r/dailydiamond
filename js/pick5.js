@@ -23,20 +23,9 @@ let pick5GamePlayers = {
 };
 
 
+const PICK5_SLOTS = 5;
 
-
-let pick5Hitters = [
-    null,
-    null,
-    null
-];
-
-
-let pick5Starter = null;
-
-let pick5Reliever = null;
-
-
+let pick5Hitters = Array(PICK5_SLOTS).fill(null);
 
 /*
 ========================
@@ -67,7 +56,6 @@ document
 
 (async()=>{
 
-
     console.log(
         "Loading Pick5..."
     );
@@ -80,6 +68,9 @@ document
 
 
     await pick5LoadSavedLineup();
+
+
+    await pick5UpdateLiveScores();
 
 
     await pick5LoadLeaderboard();
@@ -96,7 +87,6 @@ document
 
 
 
-
 function pick5IsGameStarted(player){
 
     let game = pick5TodaysGames.find(
@@ -108,13 +98,16 @@ function pick5IsGameStarted(player){
         return false;
 
 
-    let status =
-    game.status?.abstractGameState;
+    let status = game.status;
 
 
     return (
-        status === "Live" ||
-        status === "Final"
+        status.abstractGameState === "Final" ||
+        (
+            status.abstractGameState === "Live" &&
+            status.codedGameState !== "S" &&
+            status.detailedState !== "Warmup"
+        )
     );
 
 }
@@ -299,27 +292,20 @@ document
         slot.dataset.slot;
 
 
-        let currentPlayer = null;
+        let index =
+        Number(
+            pick5SelectedSlot.replace("hitter","")
+        );
 
 
-        if(pick5SelectedSlot==="hitter0")
-            currentPlayer=pick5Hitters[0];
-
-        if(pick5SelectedSlot==="hitter1")
-            currentPlayer=pick5Hitters[1];
-
-        if(pick5SelectedSlot==="hitter2")
-            currentPlayer=pick5Hitters[2];
-
-        if(pick5SelectedSlot==="starter")
-            currentPlayer=pick5Starter;
-
-        if(pick5SelectedSlot==="reliever")
-            currentPlayer=pick5Reliever;
+        let currentPlayer =
+        pick5Hitters[index];
 
 
-
-        if(currentPlayer && pick5IsGameStarted(currentPlayer)){
+        if(
+            currentPlayer &&
+            pick5IsGameStarted(currentPlayer)
+        ){
             return;
         }
 
@@ -399,9 +385,7 @@ function pick5RenderGameCarousel(){
     );
 
 
-
     carousel.innerHTML="";
-
 
 
     console.log(
@@ -414,66 +398,132 @@ function pick5RenderGameCarousel(){
     pick5TodaysGames.forEach(game=>{
 
 
-    let card =
-    document.createElement("div");
+        let status =
+        game.status?.detailedState;
+
+
+        let abstract =
+        game.status?.abstractGameState;
+
+
+        // remove finished/cancelled/postponed games
+        if(
+            abstract === "Final"
+        ){
+            return;
+        }
 
 
 
-    card.className =
-    "pick5-game-card";
+        // only true in progress games
+        let inProgress =
+        abstract === "Live" &&
+        game.status?.codedGameState === "I";
 
 
 
-    card.innerHTML = `
+        let card =
+        document.createElement("div");
 
-    <div class="pick5-matchup">
 
-        <div class="pick5-team-name">
-            ${pick5TeamName(game.teams.away.team.name)}
+        card.className =
+        "pick5-game-card";
+
+
+
+        if(inProgress){
+
+            card.classList.add(
+                "locked"
+            );
+
+        }
+
+
+
+        card.innerHTML = `
+
+
+        <div class="pick5-matchup">
+
+
+            <div class="pick5-team-name">
+                ${pick5TeamName(game.teams.away.team.name)}
+            </div>
+
+
+            <div class="pick5-team-name">
+                ${pick5TeamName(game.teams.home.team.name)}
+            </div>
+
+
+            <div class="pick5-game-time">
+
+                ${
+                    inProgress
+                    ?
+                    "IN PROGRESS"
+                    :
+                    new Date(game.gameDate)
+                    .toLocaleTimeString([],{
+                        hour:"numeric",
+                        minute:"2-digit"
+                    })
+                }
+
+            </div>
+
+
         </div>
 
-        <div class="pick5-team-name">
-            ${pick5TeamName(game.teams.home.team.name)}
-        </div>
 
-        <div class="pick5-game-time">
-            ${new Date(game.gameDate).toLocaleTimeString([], {
-                hour: "numeric",
-                minute: "2-digit"
-            })}
-        </div>
-
-    </div>
-
-    `;
+        `;
 
 
 
-    card.onclick=()=>{
+        // only allow picking before game starts
+        if(!inProgress){
+
+            card.onclick=()=>{
 
 
-        pick5LoadGamePlayers(
-            game
-        );
+                pick5LoadGamePlayers(
+                    game
+                );
 
 
-    };
+            };
+
+        }
 
 
 
-    carousel.appendChild(card);
+        carousel.appendChild(card);
 
 
     });
 
 
 
-    // AUTO LOAD FIRST GAME
+    // auto load first available game
 
-    if(pick5TodaysGames.length){
+    let firstGame =
+    pick5TodaysGames.find(game=>{
+
+
+        return (
+            game.status?.abstractGameState === "Preview"
+        );
+
+
+    });
+
+
+
+    if(firstGame){
 
         pick5LoadGamePlayers(
-            pick5TodaysGames[0]
+            firstGame
         );
 
     }
@@ -612,21 +662,9 @@ function pick5RenderPlayers(){
     );
 
 
-    players.sort((a,b)=>{
-
-
-        if(a.position==="P" && b.position!=="P")
-            return 1;
-
-
-        if(a.position!=="P" && b.position==="P")
-            return -1;
-
-
-        return a.name.localeCompare(b.name);
-
-
-    });
+    players.sort((a,b)=>
+        a.name.localeCompare(b.name)
+    );
 
 
 
@@ -791,46 +829,33 @@ SELECT PLAYER
 ========================
 */
 
+function pick5SelectPlayer(slot, player){
 
-function pick5SelectPlayer(
-    slot,
-    player
-){
-
-
-    if(slot==="hitter0")
-        pick5Hitters[0]=player;
+    if(!slot || !player)
+        return;
 
 
-    if(slot==="hitter1")
-        pick5Hitters[1]=player;
+    let index =
+    Number(
+        slot.replace("hitter","")
+    );
 
 
-    if(slot==="hitter2")
-        pick5Hitters[2]=player;
+    if(index < 0 || index >= PICK5_SLOTS)
+        return;
 
 
-    if(slot==="starter")
-        pick5Starter=player;
-
-
-    if(slot==="reliever")
-        pick5Reliever=player;
-
+    pick5Hitters[index] = player;
 
 
     pick5RenderLineup();
 
-    pick5SavePicks();   
-
+    pick5SavePicks();
 
 
     document
-    .getElementById(
-        "pick5PlayerPopup"
-    )
+    .getElementById("pick5PlayerPopup")
     .style.display="none";
-
 
 }
 
@@ -841,41 +866,27 @@ function pick5SelectPlayer(
 
 
 
-
 function pick5RenderLineup(){
 
-
     document
-    .querySelectorAll(
-        ".pick5-slot"
-    )
+    .querySelectorAll(".pick5-slot")
     .forEach(slot=>{
 
 
-        let player = null;
+        let index =
+        Number(
+            slot.dataset.slot.replace("hitter","")
+        );
 
 
-
-        if(slot.dataset.slot==="hitter0")
-            player=pick5Hitters[0];
-
-        if(slot.dataset.slot==="hitter1")
-            player=pick5Hitters[1];
-
-        if(slot.dataset.slot==="hitter2")
-            player=pick5Hitters[2];
-
-        if(slot.dataset.slot==="starter")
-            player=pick5Starter;
-
-        if(slot.dataset.slot==="reliever")
-            player=pick5Reliever;
-
+        let player =
+        pick5Hitters[index];
 
 
         if(player){
 
-            let locked = pick5IsGameStarted(player);
+            let locked =
+            pick5IsGameStarted(player);
 
 
             slot.innerHTML = `
@@ -905,17 +916,18 @@ function pick5RenderLineup(){
 
                         ${pick5GetOpponent(player)}
 
-                        <span>
-                            ${pick5GetGameTime(player)}
-                        </span>
-
-
                         ${
                             locked
                             ?
-                            "<span class='pick5-lock-badge'>LOCKED</span>"
+                            `<span class="pick5-player-stats">
+                                ${pick5GetPlayerGameStats(player)}
+                            </span>`
                             :
-                            ""
+                            `
+                            <span>
+                                ${pick5GetGameTime(player)}
+                            </span>
+                            `
                         }
 
 
@@ -946,11 +958,20 @@ function pick5RenderLineup(){
             `;
 
 
+        } else {
+
+            slot.innerHTML = `
+
+                    <div class="empty-slot">
+                        + Select Hitter
+                    </div>
+
+            `;
+
         }
 
 
     });
-
 
 }
 
@@ -958,6 +979,52 @@ function pick5GetPlayerPoints(player){
 
     // temporary until scoring is added
     return 0;
+
+}
+
+function pick5GetPlayerGameStats(player){
+
+    let stats = player.stats?.batting;
+
+
+    if(!stats)
+        return "0-0";
+
+
+    let line = [];
+
+
+    // hits-at bats
+    line.push(
+        `${stats.hits || 0}-${stats.atBats || 0}`
+    );
+
+
+    if(stats.doubles)
+        line.push(`${stats.doubles} 2B`);
+
+
+    if(stats.homeRuns)
+        line.push(`${stats.homeRuns} HR`);
+
+
+    if(stats.runs)
+        line.push(`${stats.runs} R`);
+
+
+    if(stats.rbi)
+        line.push(`${stats.rbi} RBI`);
+
+
+    if(stats.baseOnBalls)
+        line.push(`${stats.baseOnBalls} BB`);
+
+
+    if(stats.stolenBases)
+        line.push(`${stats.stolenBases} SB`);
+
+
+    return line.join(", ");
 
 }
 
@@ -1030,6 +1097,13 @@ async function pick5LoadLeaderboard(){
             ascending:false
         }
     );
+
+    if(error){
+
+        console.log(error);
+        return;
+
+    }
 
 
     for(let game of data){
@@ -1111,42 +1185,12 @@ function pick5UpdateTeamButtons(){
 
 function pick5FilterPlayersBySlot(players){
 
-
-    if(
-        pick5SelectedSlot === "hitter0" ||
-        pick5SelectedSlot === "hitter1" ||
-        pick5SelectedSlot === "hitter2"
-    ){
-
-        return players.filter(
-            p => !pick5IsPitcher(p)
-        );
-
-    }
-
-
-
-    if(
-        pick5SelectedSlot === "starter" ||
-        pick5SelectedSlot === "reliever"
-    ){
-
-        return players.filter(
-            p => pick5IsPitcher(p)
-        );
-
-    }
-
-
-    return players;
+    return players.filter(player =>
+        !["P","SP","RP"].includes(player.position)
+    );
 
 }
 
-function pick5IsPitcher(player){
-
-    return player.position === "P";
-
-}
 
 
 function pick5IsPlayerLocked(player){
@@ -1235,50 +1279,32 @@ function pick5RenderLeaderboard(players){
 
 function pick5IsPlayerSelected(player){
 
-    let selectedPlayers = [
-
-        ...pick5Hitters,
-
-        pick5Starter,
-
-        pick5Reliever
-
-    ];
-
-
-    let currentPlayer =
+    let current =
     pick5GetCurrentSlotPlayer();
 
 
-
-    return selectedPlayers.some(
+    return pick5Hitters.some(
         selected =>
-        selected &&
-        selected.id === player.id &&
-        selected !== currentPlayer
+            selected &&
+            selected.id === player.id &&
+            selected !== current
     );
 
 }
 
 function pick5GetCurrentSlotPlayer(){
 
-    if(pick5SelectedSlot==="hitter0")
-        return pick5Hitters[0];
-
-    if(pick5SelectedSlot==="hitter1")
-        return pick5Hitters[1];
-
-    if(pick5SelectedSlot==="hitter2")
-        return pick5Hitters[2];
-
-    if(pick5SelectedSlot==="starter")
-        return pick5Starter;
-
-    if(pick5SelectedSlot==="reliever")
-        return pick5Reliever;
+    if(!pick5SelectedSlot)
+        return null;
 
 
-    return null;
+    let index =
+    Number(
+        pick5SelectedSlot.replace("hitter","")
+    );
+
+
+    return pick5Hitters[index] || null;
 
 }
 
@@ -1294,74 +1320,33 @@ async function pick5LoadSavedLineup(){
         return;
 
 
-    const {data,error} = await db
+
+    const {data,error}=await db
     .from("pick5PlayerGames")
     .select("*")
-    .eq(
-        "playerId",
-        playerId
-    )
-    .eq(
-        "date",
-        pick5SelectedDate
-    )
+    .eq("playerId",playerId)
+    .eq("date",pick5SelectedDate)
     .maybeSingle();
 
 
 
-    if(error){
-
-        console.log(
-            "No saved Pick5 lineup"
-        );
-
+    if(error || !data)
         return;
-
-    }
 
 
 
     if(data.picks){
 
 
-        pick5Hitters[0] =
-        data.picks.hitter0
-        ?
-        pick5FindPlayer(data.picks.hitter0)
-        :
-        null;
+        pick5Hitters =
+        Array.from(
+            {length:PICK5_SLOTS},
+            (_,i)=>
+            pick5FindPlayer(
+                data.picks[`hitter${i}`]
+            )
 
-
-        pick5Hitters[1] =
-        data.picks.hitter1
-        ?
-        pick5FindPlayer(data.picks.hitter1)
-        :
-        null;
-
-
-        pick5Hitters[2] =
-        data.picks.hitter2
-        ?
-        pick5FindPlayer(data.picks.hitter2)
-        :
-        null;
-
-
-        pick5Starter =
-        data.picks.starter
-        ?
-        pick5FindPlayer(data.picks.starter)
-        :
-        null;
-
-
-        pick5Reliever =
-        data.picks.reliever
-        ?
-        pick5FindPlayer(data.picks.reliever)
-        :
-        null;
+        );
 
 
     }
@@ -1374,6 +1359,10 @@ async function pick5LoadSavedLineup(){
 
 function pick5FindPlayer(id){
 
+    if(!id)
+        return null;
+
+
     return pick5PlayerPool.find(
         p => p.id === id
     ) || null;
@@ -1382,86 +1371,60 @@ function pick5FindPlayer(id){
 
 async function pick5SavePicks(){
 
-    let playerId = localStorage.getItem("playerId");
+
+    let playerId =
+    localStorage.getItem("playerId");
 
 
-    if(!playerId){
-
-        console.log("No player ID found");
+    if(!playerId)
         return;
 
-    }
 
 
-    let picks = {
-
-        hitter0:
-        pick5Hitters[0]?.id || null,
-
-        hitter1:
-        pick5Hitters[1]?.id || null,
-
-        hitter2:
-        pick5Hitters[2]?.id || null,
-
-        starter:
-        pick5Starter?.id || null,
-
-        reliever:
-        pick5Reliever?.id || null
-
-    };
+    let picks={};
 
 
+    pick5Hitters.forEach((player,index)=>{
 
-    const { data, error } = await db
-    .from("pick5PlayerGames")
-    .upsert({
 
-        playerId: playerId,
+        picks[
+            `hitter${index}`
+        ] =
+        player?.id || null;
 
-        date: pick5SelectedDate,
 
-        picks: picks
-
-    },{
-        onConflict:
-        "playerId,date"
     });
 
 
 
-    if(error){
+    const {error}=await db
+    .from("pick5PlayerGames")
+    .upsert({
 
+        playerId,
+
+        date:pick5SelectedDate,
+
+        picks
+
+    },{
+        onConflict:"playerId,date"
+    });
+
+
+
+    if(error)
         console.log(
             "Pick5 save error:",
             error
         );
 
-    }
-    else{
-
-        console.log(
-            "Pick5 saved",
-            data
-        );
-
-    }
 
 }
 
 async function pick5UpdateLiveScores(){
 
-    let activePlayers = [
-
-        ...pick5Hitters.filter(Boolean),
-
-        pick5Starter,
-
-        pick5Reliever
-
-    ].filter(Boolean);
-
+    let activePlayers = pick5Hitters.filter(Boolean);
 
 
     for(let player of activePlayers){
@@ -1530,6 +1493,8 @@ async function pick5UpdateLiveScores(){
 
 
 
+            player.stats = foundPlayer.stats;
+
             player.points =
             pick5CalculatePoints(
                 player,
@@ -1557,34 +1522,10 @@ async function pick5UpdateLiveScores(){
 
 
 
-    let scores = {
-
-        hitter0:
-        pick5Hitters[0]?.points || 0,
-
-        hitter1:
-        pick5Hitters[1]?.points || 0,
-
-        hitter2:
-        pick5Hitters[2]?.points || 0,
-
-        starter:
-        pick5Starter?.points || 0,
-
-        reliever:
-        pick5Reliever?.points || 0
-
-    };
-
-
-
-    let total =
-    Object.values(scores)
-    .reduce(
-        (a,b)=>a+b,
+    let total = pick5Hitters.reduce(
+        (sum, player) => sum + (player?.points || 0),
         0
     );
-
 
 
     await db
@@ -1612,120 +1553,34 @@ async function pick5UpdateLiveScores(){
 
     pick5RenderLineup();
 
-}
-
-
-function pick5ConvertIP(ip){
-
-    if(!ip)
-        return 0;
-
-
-    let parts =
-    ip.toString().split(".");
-
-
-    let innings =
-    Number(parts[0]) || 0;
-
-
-    let outs =
-    Number(parts[1]) || 0;
-
-
-    return innings + (outs / 3);
+    pick5LoadLeaderboard();
 
 }
 
 
-function pick5CalculatePoints(
-    player,
-    stats
-){
+function pick5CalculatePoints(player, stats){
 
     let points = 0;
 
-
-
-    if(player.position === "P"){
-
-
-        points +=
-        pick5ConvertIP(
-            stats.pitching?.inningsPitched
-        ) * 3;
-
-
-
-        points +=
-        (stats.pitching?.strikeOuts || 0) * 2;
-
-
-
-        points +=
-        (stats.pitching?.wins || 0) * 5;
-
-
-
-        points +=
-        (stats.pitching?.saves || 0) * 5;
-
-
-
-        points +=
-        (stats.pitching?.earnedRuns || 0) * -2;
-
-
-
-    }
-    else{
-
-
-        points +=
-        (stats.batting?.hits || 0) * 3;
-
-
-
-        points +=
-        (stats.batting?.homeRuns || 0) * 5;
-
-
-
-        points +=
-        (stats.batting?.runs || 0) * 2;
-
-
-
-        points +=
-        (stats.batting?.rbi || 0) * 2;
-
-
-
-        points +=
-        (stats.batting?.baseOnBalls || 0);
-
-
-
-        points +=
-        (stats.batting?.stolenBases || 0) * 2;
-
-
-
-    }
-
-
+    points += (stats.batting?.hits || 0) * 3;
+    points += (stats.batting?.homeRuns || 0) * 5;
+    points += (stats.batting?.runs || 0) * 2;
+    points += (stats.batting?.rbi || 0) * 2;
+    points += (stats.batting?.baseOnBalls || 0);
+    points += (stats.batting?.stolenBases || 0) * 2;
 
     return Math.round(points);
 
 }
-
 setInterval(
     pick5RefreshGameStatus,
     60000
 );
 
 
-setInterval(
-    pick5UpdateLiveScores,
-    60000
-);
+setInterval(async()=>{
+
+    await pick5UpdateLiveScores();
+    await pick5LoadLeaderboard();
+
+},60000);
