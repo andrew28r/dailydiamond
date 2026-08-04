@@ -45,12 +45,12 @@ START
 */
 
 
-document
-.getElementById("gameDate")
-.textContent =
-pick5SelectedDate;
-
-
+document.getElementById("gameDate").textContent =
+    new Date(pick5SelectedDate + "T12:00:00")
+    .toLocaleDateString([], {
+        month:"long",
+        day:"numeric"
+    }) + " Lineup";
 
 document
 .getElementById("backBtn")
