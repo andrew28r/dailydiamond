@@ -306,7 +306,7 @@ function setCurrentCalendarMonth() {
 
 }
 const minCalendarYear = 2026;
-const minCalendarMonth = 6; // July
+const minCalendarMonth = 7; // July
 
 async function loadCalendar() {
 
