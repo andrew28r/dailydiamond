@@ -917,19 +917,16 @@ function pick5RenderLineup(){
                         ${pick5GetOpponent(player)}
 
                         ${
-                            locked
+                            !locked
                             ?
-                            `<span class="pick5-player-stats">
-                                ${pick5GetPlayerGameStats(player)}
-                            </span>`
-                            :
                             `
                             <span>
                                 ${pick5GetGameTime(player)}
                             </span>
                             `
+                            :
+                            ""
                         }
-
 
                     </div>
 
@@ -1075,11 +1072,31 @@ function pick5GetOpponent(player){
 
 
 
-    return "vs " + pick5TeamName(opponent);
+    let result =
+    "vs " + pick5TeamName(opponent);
+
+
+    if(pick5IsGameStarted(player)){
+
+        let stats =
+        pick5GetPlayerGameStats(player);
+
+
+        if(stats){
+            result += `
+                <span class="pick5-player-stats">
+                    ${stats}
+                </span>
+            `;
+        }
+
+    }
+
+
+    return result;
 
 
 }
-
 
 async function pick5LoadLeaderboard(){
 
@@ -1258,11 +1275,11 @@ function pick5RenderLeaderboard(players){
             </span>
 
 
+            
             <span>
                
                 ${player.score || 0}
             </span>
-
 
         </div>
 

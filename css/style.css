@@ -2873,11 +2873,11 @@ width:100%;
 
     display:flex;
 
-    align-items:center;
+    align-items:flex-start; /* change this */
 
     gap:12px;
 
-    width:100%;
+    padding:6px;
 
 }
 
@@ -3257,5 +3257,22 @@ width:100%;
     gap:12px;
 
     padding:6px;
+
+}
+.pick5-player-points{
+
+    margin-left:auto;
+
+    align-self:flex-start;
+
+    text-align:right;
+
+    font-size:14px;
+
+    font-weight:800;
+
+    padding-top:2px;
+
+    padding-right:5px;
 
 }
