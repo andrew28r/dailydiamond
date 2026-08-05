@@ -991,20 +991,27 @@ function pick5GetPlayerGameStats(player){
     let line = [];
 
 
-    // hits-at bats
+    // Hits - At Bats
     line.push(
         `${stats.hits || 0}-${stats.atBats || 0}`
     );
 
 
+    // Extra base hits
     if(stats.doubles)
         line.push(`${stats.doubles} 2B`);
 
 
+    if(stats.triples)
+        line.push(`${stats.triples} 3B`);
+
+
+    // Power
     if(stats.homeRuns)
         line.push(`${stats.homeRuns} HR`);
 
 
+    // Production
     if(stats.runs)
         line.push(`${stats.runs} R`);
 
@@ -1013,12 +1020,31 @@ function pick5GetPlayerGameStats(player){
         line.push(`${stats.rbi} RBI`);
 
 
+    // Plate discipline
     if(stats.baseOnBalls)
         line.push(`${stats.baseOnBalls} BB`);
 
 
+    if(stats.strikeOuts)
+        line.push(`${stats.strikeOuts} K`);
+
+
+    // Speed
     if(stats.stolenBases)
         line.push(`${stats.stolenBases} SB`);
+
+
+    // Total bases (optional but useful)
+    if(stats.totalBases)
+        line.push(`${stats.totalBases} TB`);
+
+
+    // Points display
+    let points = pick5CalculatePoints(
+        player,
+        player.stats
+    );
+
 
 
     return line.join(", ");
@@ -1565,21 +1591,119 @@ async function pick5UpdateLiveScores(){
 
 }
 
-
 function pick5CalculatePoints(player, stats){
 
     let points = 0;
 
-    points += (stats.batting?.hits || 0) * 3;
-    points += (stats.batting?.homeRuns || 0) * 5;
-    points += (stats.batting?.runs || 0) * 2;
-    points += (stats.batting?.rbi || 0) * 2;
-    points += (stats.batting?.baseOnBalls || 0);
-    points += (stats.batting?.stolenBases || 0) * 2;
+    const batting = stats.batting || {};
+
+
+    // =========================
+    // HITTING
+    // =========================
+
+    points += (batting.hits || 0) * 3;
+
+    points += (batting.homeRuns || 0) * 5;
+
+    points += (batting.runs || 0) * 2;
+
+    points += (batting.rbi || 0) * 2;
+
+    points += (batting.baseOnBalls || 0);
+
+    points += (batting.stolenBases || 0) * 2;
+
+
+    // Extra-base hits
+
+    points += (batting.doubles || 0) * 2;
+
+    points += (batting.triples || 0) * 4;
+
+
+    // Total bases
+
+    points += (batting.totalBases || 0);
+
+
+    // Sacrifice flies
+
+    points += (batting.sacFlies || 0);
+
+
+
+    // =========================
+    // QUALITY BONUSES
+    // =========================
+
+
+    // 2+ hit game
+    if((batting.hits || 0) >= 2){
+        points += 5;
+    }
+
+
+    // 3+ hit game
+    if((batting.hits || 0) >= 3){
+        points += 5;
+    }
+
+
+    // Multi-HR game
+    if((batting.homeRuns || 0) >= 2){
+        points += 10;
+    }
+
+
+    // Big RBI game
+    if((batting.rbi || 0) >= 3){
+        points += 5;
+    }
+
+
+
+    // =========================
+    // NEGATIVES
+    // =========================
+
+
+    // Strikeouts
+    points -= (batting.strikeOuts || 0);
+
+
+    // Double plays
+    points -= (batting.groundIntoDoublePlay || 0) * 2;
+
+
+
+    // =========================
+    // POSITION BONUSES
+    // =========================
+
+
+    if(player.position === "C"){
+
+        points += (batting.rbi || 0) * 0.5;
+
+    }
+
+
+    if(
+        player.position === "SS" ||
+        player.position === "2B"
+    ){
+
+        points += (batting.stolenBases || 0);
+
+    }
+
+
 
     return Math.round(points);
 
 }
+
 setInterval(
     pick5RefreshGameStatus,
     60000
