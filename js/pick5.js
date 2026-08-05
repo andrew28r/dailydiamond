@@ -920,7 +920,7 @@ function pick5RenderLineup(){
                             !locked
                             ?
                             `
-                            <span>
+                            <span class="pick5-game-time">
                                 ${pick5GetGameTime(player)}
                             </span>
                             `
@@ -1048,7 +1048,6 @@ function pick5GetTeamName(teamId){
 
 function pick5GetOpponent(player){
 
-
     let game =
     pick5TodaysGames.find(
         g=>g.gamePk === player.gameId
@@ -1061,15 +1060,10 @@ function pick5GetOpponent(player){
 
     let opponent =
     player.team === game.teams.home.team.id
-
     ?
-
     game.teams.away.team.name
-
     :
-
     game.teams.home.team.name;
-
 
 
     let result =
@@ -1083,18 +1077,15 @@ function pick5GetOpponent(player){
 
 
         if(stats){
-            result += `
-                <span class="pick5-player-stats">
-                    ${stats}
-                </span>
-            `;
+
+            result += `: ${stats}`;
+
         }
 
     }
 
 
     return result;
-
 
 }
 

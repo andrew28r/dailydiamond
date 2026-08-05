@@ -3276,3 +3276,11 @@ width:100%;
     padding-right:5px;
 
 }
+
+.pick5-game-time {
+    margin-left:6px;
+}
+
+.pick5-player-stats {
+    display:inline;
+}
