@@ -441,9 +441,8 @@ async function loadCalendar() {
 
         }
 
-
         // Won
-        else if (game && game.win === "true") {
+        else if (game && (game.win === true || game.win === "true")) {
 
             square.classList.add("completed");
 
@@ -451,7 +450,7 @@ async function loadCalendar() {
 
 
         // Failed
-        else if (game && game.completed === "true") {
+        else if (game && (game.completed === true || game.completed === "true")) {
 
             square.classList.add("failed");
 
