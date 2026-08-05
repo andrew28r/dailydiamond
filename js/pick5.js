@@ -52,8 +52,6 @@ document
 
 
 
-
-
 (async()=>{
 
     console.log(
@@ -67,11 +65,34 @@ document
     await pick5BuildPlayerPool();
 
 
+    // LOAD FIRST GAME IMMEDIATELY
+    let firstGame =
+    pick5TodaysGames.find(game =>
+        game.status?.abstractGameState !== "Final"
+    );
+
+
+    if(firstGame){
+
+        pick5LoadGamePlayers(
+            firstGame
+        );
+
+    }
+
+
     await pick5LoadSavedLineup();
 
 
     await pick5UpdateLiveScores();
 
+    await pick5CalculateScoresForDate(
+        pick5SelectedDate
+    );
+
+    await pick5CalculateScoresForDate(
+        pick5GetYesterdayDate()
+    );
 
     await pick5LoadLeaderboard();
 
@@ -209,58 +230,63 @@ async function pick5BuildPlayerPool(){
 
 
 
-
-async function pick5LoadRoster(
-    teamId,
-    game
-){
-
+async function pick5LoadRoster(teamId, game){
 
     const res = await fetch(
+        `${PICK5_API}/game/${game.gamePk}/boxscore`
+    );
 
-        `${PICK5_API}/teams/${teamId}/roster`
+    const data = await res.json();
 
+
+    let team =
+        game.teams.home.team.id === teamId
+        ? data.teams.home
+        : data.teams.away;
+
+
+    if(!team){
+        return [];
+    }
+
+
+    console.log(
+        "Team boxscore:",
+        team.team.name,
+        team.battingOrder
     );
 
 
-    const data =
-    await res.json();
+    if(!team.battingOrder || team.battingOrder.length < 9){
+
+        return [];
+
+    }
 
 
+    return team.battingOrder
+    .slice(0,9)
+    .map(id=>{
 
-    return (
+        let player =
+        team.players[`ID${id}`];
 
-        data.roster || []
 
-    )
-    .map(p=>{
+        if(!player)
+            return null;
 
 
         return {
-
-            id:
-            p.person.id,
-
-            name:
-            p.person.fullName,
-
-            position:
-            p.position?.abbreviation || "",
-
-            team:
-            teamId,
-
-            gameId:
-            game.gamePk,
-
-            points: 0
-
+            id: player.person.id,
+            name: player.person.fullName,
+            position: player.position?.abbreviation || "",
+            team: teamId,
+            gameId: game.gamePk,
+            points:0
         };
 
-
-    });
-
-
+    })
+    .filter(Boolean);
 
 }
 
@@ -512,7 +538,7 @@ function pick5RenderGameCarousel(){
 
 
         return (
-            game.status?.abstractGameState === "Preview"
+            game.status?.abstractGameState !== "Final"
         );
 
 
@@ -610,10 +636,31 @@ function pick5LoadGamePlayers(game){
         game.teams.away.team.name
     );
 
+    console.log(
+        "Home starters:",
+        pick5GamePlayers.home.length,
+        "Away starters:",
+        pick5GamePlayers.away.length
+    );
+
+    if(
+        pick5GamePlayers[pick5SelectedTeam].length < 9
+    ){
+
+        document.getElementById(
+            "pick5GamePlayers"
+        ).innerHTML = `
+            <div class="pick5-no-lineup">
+                ${pick5SelectedTeam === "home" ? "Home" : "Away"} lineup not announced
+            </div>
+        `;
+
+        return;
+
+    }
 
 
     pick5RenderPlayers();
-
 
 }
 
@@ -653,6 +700,20 @@ function pick5RenderPlayers(){
 
     pick5GamePlayers.away;
 
+
+
+    // ADD THIS
+    if(players.length < 9){
+
+        container.innerHTML = `
+            <div class="pick5-no-lineup">
+                ${pick5SelectedTeam === "home" ? "Home" : "Away"} lineup not announced
+            </div>
+        `;
+
+        return;
+
+    }
 
 
     players = pick5FilterPlayersBySlot(players);
@@ -913,21 +974,7 @@ function pick5RenderLineup(){
 
 
                     <div class="pick5-selected-game">
-
                         ${pick5GetOpponent(player)}
-
-                        ${
-                            !locked
-                            ?
-                            `
-                            <span class="pick5-game-time">
-                                ${pick5GetGameTime(player)}
-                            </span>
-                            `
-                            :
-                            ""
-                        }
-
                     </div>
 
 
@@ -1096,6 +1143,18 @@ function pick5GetOpponent(player){
     "vs " + pick5TeamName(opponent);
 
 
+    // add game time on same line
+    if(!pick5IsGameStarted(player)){
+
+        result += `
+            <span class="pick5-display-game-time">
+                ${pick5GetGameTime(player)}
+            </span>
+        `;
+
+    }
+
+
     if(pick5IsGameStarted(player)){
 
         let stats =
@@ -1118,12 +1177,16 @@ function pick5GetOpponent(player){
 async function pick5LoadLeaderboard(){
 
 
+    let yesterday =
+    pick5GetYesterdayDate();
+
+
     const {data,error} = await db
     .from("pick5PlayerGames")
     .select("*")
     .eq(
         "date",
-        pick5SelectedDate
+        yesterday
     )
     .order(
         "score",
@@ -1131,6 +1194,7 @@ async function pick5LoadLeaderboard(){
             ascending:false
         }
     );
+
 
     if(error){
 
@@ -1140,7 +1204,9 @@ async function pick5LoadLeaderboard(){
     }
 
 
+
     for(let game of data){
+
 
         let player =
         await db
@@ -1153,9 +1219,201 @@ async function pick5LoadLeaderboard(){
         .single();
 
 
-        game.playerData = player.data;
+
+        game.playerData =
+        player.data;
+
+
+
+        // save yesterday score for display
+        game.yesterdayScore =
+        game.score || 0;
+
+
+
+        // find today's score if they played today
+        const {data:todayGame} =
+        await db
+        .from("pick5PlayerGames")
+        .select("score")
+        .eq(
+            "playerId",
+            game.playerId
+        )
+        .eq(
+            "date",
+            pick5SelectedDate
+        )
+        .maybeSingle();
+
+
+
+        game.todayScore =
+        todayGame?.score || 0;
+
 
     }
+
+
+
+    // already sorted by yesterday score
+    pick5RenderLeaderboard(data);
+
+
+}
+
+function pick5GetYesterdayDate(){
+
+    let date = new Date(
+        pick5SelectedDate + "T12:00:00"
+    );
+
+
+    date.setDate(
+        date.getDate() - 1
+    );
+
+
+    return date
+        .toISOString()
+        .split("T")[0];
+
+}
+async function pick5UpdateYesterdayScores(){
+
+    let yesterday =
+    pick5GetYesterdayDate();
+
+
+    const {data:games}=await db
+    .from("pick5PlayerGames")
+    .select("*")
+    .eq(
+        "date",
+        yesterday
+    );
+
+
+    console.log(
+        "Yesterday games:",
+        games
+    );
+
+}
+
+async function pick5CalculateScoresForDate(date){
+
+
+    console.log("Calculating Pick5 scores for:", date);
+
+
+    // Load games for that date
+    const scheduleRes = await fetch(
+        `${PICK5_API}/schedule?sportId=1&date=${date}`
+    );
+
+
+    const scheduleData = await scheduleRes.json();
+
+
+    let games =
+    scheduleData.dates?.[0]?.games || [];
+
+
+
+    if(!games.length){
+        console.log("No games found:", date);
+        return;
+    }
+
+
+
+    // Load all boxscores
+    let players = [];
+
+
+    for(let game of games){
+
+
+        try{
+
+
+            const res = await fetch(
+                `${PICK5_API}/game/${game.gamePk}/boxscore`
+            );
+
+
+            const data = await res.json();
+
+
+
+            for(let team of [
+                data.teams.home,
+                data.teams.away
+            ]){
+
+
+                Object.values(
+                    team.players || {}
+                )
+                .forEach(p=>{
+
+
+                    if(p.person){
+
+                        players.push({
+
+                            id:p.person.id,
+
+                            stats:p.stats,
+
+                            points:0,
+
+                            position:
+                            p.position?.abbreviation || ""
+
+                        });
+
+
+                    }
+
+
+                });
+
+
+            }
+
+
+        }
+        catch(e){
+
+            console.log(
+                "Boxscore error",
+                e
+            );
+
+        }
+
+    }
+
+
+
+    console.log(
+        "Loaded players:",
+        players.length
+    );
+
+
+
+    // Load everyone's picks
+    const {data:entries,error}=await db
+    .from("pick5PlayerGames")
+    .select("*")
+    .eq(
+        "date",
+        date
+    );
+
 
 
     if(error){
@@ -1166,13 +1424,73 @@ async function pick5LoadLeaderboard(){
     }
 
 
+
+    for(let entry of entries){
+
+
+        let total = 0;
+
+
+        for(let id of Object.values(entry.picks || {})){
+
+
+            let player =
+            players.find(
+                p=>p.id === id
+            );
+
+
+            if(player){
+
+
+                let points =
+                pick5CalculatePoints(
+                    player,
+                    player.stats || {}
+                );
+
+
+                total += points;
+
+
+            }
+
+
+        }
+
+
+
+        await db
+        .from("pick5PlayerGames")
+        .update({
+
+            score: total
+
+        })
+        .eq(
+            "playerId",
+            entry.playerId
+        )
+        .eq(
+            "date",
+            date
+        );
+
+
+
+        console.log(
+            entry.playerId,
+            total
+        );
+
+
+    }
+
+
     console.log(
-        "Leaderboard:",
-        data
+        "Finished scoring:",
+        date
     );
-
-    pick5RenderLeaderboard(data);
-
 
 }
 
@@ -1289,13 +1607,14 @@ function pick5RenderLeaderboard(players){
 
 
             <span>
+                ${player.yesterdayScore || 0}
             </span>
 
 
             
             <span>
                
-                ${player.score || 0}
+                ${player.todayScore  || 0}
             </span>
 
         </div>
@@ -1499,50 +1818,7 @@ async function pick5GetAllPickedPlayers(){
 
 }
 
-async function pick5UpdateAllUserScores(){
 
-    const {data:games} = await db
-    .from("pick5PlayerGames")
-    .select("*")
-    .eq("date",pick5SelectedDate);
-
-
-    for(let game of games){
-
-        let total = 0;
-
-
-        Object.values(game.picks)
-        .forEach(id=>{
-
-            let player =
-            pick5PlayerPool.find(
-                p=>p.id===id
-            );
-
-
-            total += player?.points || 0;
-
-        });
-
-
-        await db
-        .from("pick5PlayerGames")
-        .update({
-            score:total
-        })
-        .eq(
-            "playerId",
-            game.playerId
-        )
-        .eq(
-            "date",
-            pick5SelectedDate
-        );
-
-    }
-
-}
 
 async function pick5UpdateLiveScores(){
 
@@ -1802,6 +2078,16 @@ setInterval(async()=>{
 
     await pick5UpdateLiveScores();
     await pick5UpdateAllUserScores();
+    await pick5CalculateScoresForDate(
+        pick5SelectedDate
+    );
+
+
+    await pick5CalculateScoresForDate(
+        pick5GetYesterdayDate()
+    );
+
+
     await pick5LoadLeaderboard();
 
 
