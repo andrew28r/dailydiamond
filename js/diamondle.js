@@ -743,7 +743,7 @@ async function guessPlayer(){
 
 
     const result =
-        comparePlayer(
+        await comparePlayer(
             fullPlayer,
             gameInfoObj,
             teamInfo
@@ -958,7 +958,23 @@ COMPARE
 */
 
 
-function comparePlayer(guess, answer, guessTeam){
+async function comparePlayer(guess, answer, guessTeam){
+
+    let guessPos =
+        guess.primaryPosition?.abbreviation;
+
+    let answerPos =
+        answer.primaryPosition?.abbreviation;
+
+
+    // Convert "P" into SP/RP
+    if (guessPos === "P") {
+        guessPos = await getPitcherRole(guess.id);
+    }
+
+    if (answerPos === "P") {
+        answerPos = await getPitcherRole(answer.id);
+    }
 
 
     return {
@@ -966,27 +982,22 @@ function comparePlayer(guess, answer, guessTeam){
         position:
         (() => {
 
-            const guessPos =
-                guess.pitcherRole || guess.primaryPosition?.abbreviation;
-
-            const answerPos =
-                answer.pitcherRole || answer.primaryPosition?.abbreviation;
+            // Exact match
+            if (guessPos === answerPos)
+                return "green";
 
             const pitchers = [
                 "SP",
                 "RP"
             ];
 
-            if(
+
+            if (
                 pitchers.includes(guessPos) &&
                 pitchers.includes(answerPos)
             )
                 return "yellow";
                 
-            // Exact position
-            if (guessPos === answerPos)
-                return "green";
-
 
             const outfield = [
                 "LF",
@@ -1003,7 +1014,6 @@ function comparePlayer(guess, answer, guessTeam){
             ];
 
 
-            // Outfield close
             if (
                 outfield.includes(guessPos) &&
                 outfield.includes(answerPos)
@@ -1011,7 +1021,6 @@ function comparePlayer(guess, answer, guessTeam){
                 return "yellow";
 
 
-            // Infield close
             if (
                 infield.includes(guessPos) &&
                 infield.includes(answerPos)
