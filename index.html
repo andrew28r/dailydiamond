@@ -137,34 +137,6 @@
 
   </div>
 
-  <div class="hub-card" id="pick5HubCard" style="display:none;">
-
-  <div class="hub-content">
-
-    <h3 class="hub-title">
-      Pick5
-    </h3>
-
-    <p class="hub-description">
-      Pick your MLB lineup and score points.
-    </p>
-    
-      <div id="NewGameTag" class="hub-status hub-NewGame">
-          New Game
-      </div>
-
-    <div id="pick5Status" class="hub-status hub-incomplete">
-      
-    </div>
-
-  </div>
-
-  <button class="hub-action" id="pick5PlayBtn">
-    Play
-  </button>
-
-</div>
-
 
 </div>
 
@@ -341,26 +313,6 @@ document
 
 
 
-// =====================
-// PICK5 ACCESS
-// =====================
-
-const pick5AllowedPlayers = [
-  "andrew28r",
-  "Roach"
-];
-
-
-if(
-    pick5AllowedPlayers.includes(currentPlayerId)
-){
-
-    document
-    .getElementById("pick5HubCard")
-    .style.display = "flex";
-
-}
-
 
 
 
@@ -378,14 +330,6 @@ document
 };
 
 
-
-document
-.getElementById("pick5PlayBtn")
-.onclick = ()=>{
-
-    window.location.href="pick5.html";
-
-};
 
 
 
