@@ -1456,10 +1456,98 @@ async function pick5SavePicks(){
 
 }
 
+
+async function pick5GetAllPickedPlayers(){
+
+    const {data,error} = await db
+    .from("pick5PlayerGames")
+    .select("picks")
+    .eq(
+        "date",
+        pick5SelectedDate
+    );
+
+
+    if(error || !data)
+        return [];
+
+
+    let ids = [];
+
+
+    data.forEach(game=>{
+
+        Object.values(game.picks || {})
+        .forEach(id=>{
+
+            if(id)
+                ids.push(id);
+
+        });
+
+    });
+
+
+    ids = [
+        ...new Set(ids)
+    ];
+
+
+    return pick5PlayerPool.filter(
+        player => ids.includes(player.id)
+    );
+
+}
+
+async function pick5UpdateAllUserScores(){
+
+    const {data:games} = await db
+    .from("pick5PlayerGames")
+    .select("*")
+    .eq("date",pick5SelectedDate);
+
+
+    for(let game of games){
+
+        let total = 0;
+
+
+        Object.values(game.picks)
+        .forEach(id=>{
+
+            let player =
+            pick5PlayerPool.find(
+                p=>p.id===id
+            );
+
+
+            total += player?.points || 0;
+
+        });
+
+
+        await db
+        .from("pick5PlayerGames")
+        .update({
+            score:total
+        })
+        .eq(
+            "playerId",
+            game.playerId
+        )
+        .eq(
+            "date",
+            pick5SelectedDate
+        );
+
+    }
+
+}
+
 async function pick5UpdateLiveScores(){
 
-    let activePlayers = pick5Hitters.filter(Boolean);
-
+    //let activePlayers = pick5Hitters.filter(Boolean);
+    let activePlayers = await pick5GetAllPickedPlayers();
 
     for(let player of activePlayers){
 
@@ -1713,6 +1801,8 @@ setInterval(
 setInterval(async()=>{
 
     await pick5UpdateLiveScores();
+    await pick5UpdateAllUserScores();
     await pick5LoadLeaderboard();
+
 
 },60000);
