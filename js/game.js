@@ -1682,6 +1682,36 @@ async function preloadFutureGames() {
           ? JSON.parse(todaysGame.gameinfo)
           : todaysGame.gameinfo;
 
+      console.log("Today's game:", gameInfoObj);
+      console.log("Leaderboard stat:", gameInfoObj.sortStat);
+      
+
+      GAME = gameInfoObj;
+      let url =
+        `${MLB_API}/stats?` +
+        `stats=${GAME.stats}` +
+        `&group=${GAME.group}` +
+        `&sportId=1` +
+        `&sortStat=${GAME.sortStat}` +
+        `&order=${GAME.sortOrder || "desc"}` +
+        `&limit=1000`;
+
+      if (GAME.startDate) url += `&startDate=${GAME.startDate}`;
+      if (GAME.endDate) url += `&endDate=${GAME.endDate}`;
+      if (GAME.season) url += `&season=${GAME.season}`;
+      if (GAME.teamId) url += `&teamId=${GAME.teamId}`;
+      if (GAME.gameType) url += `&gameType=${GAME.gameType}`;
+
+      let pool = "all";
+
+      if (["era","whip","avg","obp","slg"].includes(GAME.sortStat)) {
+        pool = "QUALIFIED";
+      }
+
+      url += `&playerPool=${pool}`;
+
+      console.log(url);
+
     } else {
       console.log("Generating new game...");
 
