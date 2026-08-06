@@ -239,19 +239,56 @@ function getDaySeed(date){
 
 async function generateRandomPlayer(){
 
-    const res = await fetch(
-        "https://statsapi.mlb.com/api/v1/sports/1/players"
+    // Get all MLB teams
+    const teamsRes = await fetch(
+        `${MLB_API}/teams?sportId=1`
     );
 
-    const data = await res.json();
+    const teamsData = await teamsRes.json();
 
-    const players =
-        data.people.filter(p =>
-            p.id &&
-            p.fullName
+    const teams = teamsData.teams;
+
+
+    let players = [];
+
+
+    // Get active roster for every team
+    for(const team of teams){
+
+        const rosterRes = await fetch(
+            `${MLB_API}/teams/${team.id}/roster?rosterType=active`
         );
 
+        const rosterData = await rosterRes.json();
 
+
+        rosterData.roster.forEach(player => {
+
+            if(player.person){
+
+                players.push({
+                    id: player.person.id,
+                    fullName: player.person.fullName,
+                    currentTeam: {
+                        id: team.id,
+                        name: team.name
+                    }
+                });
+
+            }
+
+        });
+
+    }
+
+
+    console.log(
+        "Active MLB players:",
+        players.length
+    );
+
+
+    // Pick random player
     const index =
         Math.floor(
             Math.random() * players.length
@@ -261,7 +298,6 @@ async function generateRandomPlayer(){
     return players[index];
 
 }
-
 
 
 
@@ -997,7 +1033,7 @@ async function comparePlayer(guess, answer, guessTeam){
                 pitchers.includes(answerPos)
             )
                 return "yellow";
-                
+
 
             const outfield = [
                 "LF",
