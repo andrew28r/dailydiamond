@@ -1940,20 +1940,20 @@ function getDailyGameRules(dateString) {
         teamOnly: true
       };
 
-    
+    /*
     case 6: // Saturday - New York Mets Day
       return {
         type: "team",
         teamOnly: true,
         forcedTeam: 121
-      };
+      };*/
       
-      /*
+      
     default: // Saturday
       return {
         type: "random",
         teamOnly: null
-      };*/
+      };
 
   }
 }
