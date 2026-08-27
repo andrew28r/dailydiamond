@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <title>Daily Diamond - Teammate Connection</title>
+
+    <link
+        rel="icon"
+        type="image/png"
+        href="./icon-192.png"
+    >
+
+    <link
+        rel="preconnect"
+        href="https://fonts.googleapis.com"
+    >
+
+    <link
+        rel="preconnect"
+        href="https://fonts.googleapis.com"
+        crossorigin
+    >
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Nunito:wght@200;300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet"
+    >
+
+    <!-- Existing Daily Diamond styles -->
+    <link
+        rel="stylesheet"
+        href="css/style.css"
+    >
+
+    <!-- Teammate-specific styles -->
+    <link
+        rel="stylesheet"
+        href="css/teammate.css"
+    >
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+</head>
+
+
+<body>
+
+    <pre id="output"></pre>
+
+
+    <!-- =====================================================
+         TOP BAR
+    ====================================================== -->
+
+    <div class="top-bar">
+
+        <button
+            class="icon-btn"
+            id="backBtn"
+            aria-label="Back"
+        >
+            ❮
+        </button>
+
+
+        <div class="title">
+
+            <img
+                src="icon-192_alpha.png"
+                alt="Daily Diamond"
+                class="header-logo"
+            >
+
+            <span>
+                Daily Diamond
+            </span>
+
+        </div>
+
+
+        <div class="menu-wrapper">
+
+            <button
+                class="icon-btn"
+                id="menuBtn"
+                aria-label="Menu"
+            >
+                ☰
+            </button>
+
+
+            <div
+                id="menu"
+                class="menu hidden"
+            >
+
+                <button
+                    class="menu-btn"
+                    id="giveUpBtn"
+                    type="button"
+                >
+                    Give Up
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         MAIN GAME
+    ====================================================== -->
+
+    <main class="container teammate-container">
+
+
+        <h3 id="gameTitle">
+            Teammate Connection
+        </h3>
+
+
+        <!-- =================================================
+             GAME INFO + SEARCH
+        ================================================== -->
+
+        <div class="input-wrapper">
+
+            <div class="top-input">
+
+                <div class="game-info">
+
+                    <div
+                        id="gameDate"
+                        class="game-date"
+                    ></div>
+
+
+                    <div class="guess-info">
+
+                        <span class="guess-label">
+                            Guesses:
+                        </span>
+
+                        <span
+                            id="guessNumber"
+                            class="guess-number"
+                        >
+                            0
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- SEARCH -->
+
+            <input
+                id="search"
+                type="text"
+                placeholder="Guess a player..."
+                autocomplete="off"
+                spellcheck="false"
+                disabled
+            >
+
+
+            <!-- SEARCH RESULTS -->
+
+            <div
+                id="dropdown"
+                class="dropdown"
+            ></div>
+
+
+            <!-- MESSAGE -->
+
+            <div class="hint-message teammate-message">
+
+                <div
+                    id="message"
+                    class="message"
+                ></div>
+
+            </div>
+
+        </div>
+
+
+        <!-- =================================================
+             HOW TO PLAY
+        ================================================== -->
+
+        <div
+            id="howTo"
+            class="how-to-card teammate-how-to"
+        >
+
+            <h3>
+                How to Play
+            </h3>
+
+
+            <p>
+                Connect the
+                <strong>Start Player</strong>
+                to the
+                <strong>End Player</strong>.
+            </p>
+
+
+            <br>
+
+
+            <p>
+                Each player you guess must have been a
+                <strong>teammate</strong> of the previous
+                player.
+            </p>
+
+
+            <br>
+
+
+            <p>
+                Build the shortest connection you can.
+            </p>
+
+
+            <br>
+
+
+            <h3>
+                Example
+            </h3>
+
+
+            <p>
+                Player A → Player B → Player C
+            </p>
+
+
+            <p>
+                Player B must have been a teammate of both
+                Player A and Player C.
+            </p>
+
+        </div>
+
+
+        <!-- =================================================
+             RESULT CARD
+        ================================================== -->
+
+        <div
+            id="winPopup"
+            class="result-card"
+        >
+
+            <h3 id="winTitle">
+                You Win!
+            </h3>
+
+
+            <div
+                id="scoreStats"
+                class="score-stats"
+            ></div>
+
+
+            <div class="result-buttons">
+
+                <button
+                    id="shareResultsBtn"
+                    type="button"
+                >
+                    Share
+                </button>
+
+
+                <button
+                    id="leaderboardBtn"
+                    type="button"
+                >
+                    Leaderboard
+                </button>
+
+            </div>
+
+        </div>
+
+
+        <!-- =================================================
+             CONNECTION BOARD
+        ================================================== -->
+
+        <div
+            id="board"
+            class="board teammate-board"
+        ></div>
+
+
+    </main>
+
+
+    <!-- =====================================================
+         LEADERBOARD POPUP
+    ====================================================== -->
+
+    <div
+        id="leaderboardPopup"
+        class="popup"
+    >
+
+        <div class="popup-content">
+
+            <h2>
+                Leaderboard
+            </h2>
+
+
+            <div
+                id="leaderboardList"
+                class="leaderboard-list"
+            >
+            </div>
+
+
+            <button
+                id="closeLeaderboardBtn"
+                type="button"
+            >
+                Close
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         JAVASCRIPT
+    ====================================================== -->
+
+    <script
+        src="js/teammate.js"
+        defer
+    ></script>
+
+</body>
+
+</html>

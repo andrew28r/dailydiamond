@@ -282,8 +282,7 @@ const STATS = [
   { stat: "whip", title: "WHIP", group:"pitching", includeTeamSeason: false  },
   { stat: "gamesStarted", title: "Games Started", group:"pitching", includeTeamSeason: false  },
   { stat: "completeGames", title: "Complete Games", group:"pitching", includeTeamSeason: false  },
-  { stat: "shutouts", title: "Shutouts", group:"pitching", includeTeamSeason: false  },
-  { stat: "qualityStarts", title: "Quality Starts", group:"pitching", includeTeamSeason: false  }
+  { stat: "shutouts", title: "Shutouts", group:"pitching", includeTeamSeason: false  }
 ];
 
 const YEARS = [
@@ -1820,8 +1819,7 @@ function renderStatHeader() {
     whip: "WHIP",
     gamesStarted: "GS",
     completeGames: "CG",
-    shutouts: "SHO",
-    qualityStarts: "QS"
+    shutouts: "SHO"
   };
 
   // Hide header until at least one guess exists

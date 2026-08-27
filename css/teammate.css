@@ -1,0 +1,318 @@
+/* =========================================================
+   DAILY DIAMOND - TEAMMATE CONNECTION
+   Game-specific styling only.
+
+   The main Daily Diamond UI comes from style.css.
+========================================================= */
+
+
+/* =========================================================
+   TEAMMATE CONTAINER
+========================================================= */
+
+.teammate-container {
+    width: 100%;
+    max-width: 500px;
+}
+
+
+/* =========================================================
+   SEARCH MESSAGE
+========================================================= */
+
+.teammate-message {
+    min-height: 18px;
+}
+
+
+/* =========================================================
+   CONNECTION BOARD
+========================================================= */
+
+.teammate-board {
+    width: 100%;
+    margin-top: 20px;
+}
+
+
+/* =========================================================
+   CONNECTION ROW
+========================================================= */
+
+.teammate-row {
+    width: 100%;
+    margin-bottom: 8px;
+    padding: 10px;
+
+    border-radius: 12px;
+
+    display: flex;
+    align-items: center;
+
+    background: white;
+
+    box-shadow: 0 2px 3px rgba(0, 0, 0, .08);
+
+    text-align: left;
+}
+
+
+/* =========================================================
+   PLAYER ROW CONTENT
+========================================================= */
+
+.teammate-player {
+    display: flex;
+    align-items: center;
+
+    width: 100%;
+
+    min-width: 0;
+}
+
+
+/* =========================================================
+   PLAYER HEADSHOT
+========================================================= */
+
+.teammate-headshot {
+    width: 42px;
+    height: 42px;
+
+    border-radius: 50%;
+
+    object-fit: cover;
+
+    flex-shrink: 0;
+
+    margin-right: 10px;
+
+    background: #e9ecef;
+}
+
+
+/* =========================================================
+   PLAYER INFORMATION
+========================================================= */
+
+.teammate-player-info {
+    flex: 1;
+
+    min-width: 0;
+
+    display: flex;
+    flex-direction: column;
+
+    justify-content: center;
+}
+
+
+/* =========================================================
+   PLAYER NAME
+========================================================= */
+
+.teammate-player-name {
+    font-size: 15px;
+
+    font-weight: 700;
+
+    color: #333;
+
+    line-height: 1.2;
+
+    white-space: nowrap;
+
+    overflow: hidden;
+
+    text-overflow: ellipsis;
+}
+
+
+/* =========================================================
+   PLAYER SUBTEXT
+========================================================= */
+
+.teammate-player-subtext {
+    margin-top: 2px;
+
+    font-size: 12px;
+
+    color: #777;
+
+    line-height: 1.2;
+}
+
+
+/* =========================================================
+   ROW LABEL
+========================================================= */
+
+.teammate-row-label {
+    width: 90px;
+
+    flex-shrink: 0;
+
+    text-align: right;
+
+    font-size: 12px;
+
+    font-weight: 700;
+
+    color: #777;
+
+    text-transform: uppercase;
+}
+
+
+/* =========================================================
+   START PLAYER
+========================================================= */
+
+.teammate-row.start-player {
+    border: 2px solid #28a745;
+}
+
+
+/* =========================================================
+   END PLAYER
+========================================================= */
+
+.teammate-row.end-player {
+    border: 2px solid #007bff;
+}
+
+
+/* =========================================================
+   GUESSED PLAYER
+========================================================= */
+
+.teammate-row.guess-player {
+    border: 2px solid #3f3f3f;
+}
+
+
+/* =========================================================
+   BLANK CONNECTION
+========================================================= */
+
+.teammate-row.blank-player {
+    border: 2px dashed #c2c2c2;
+
+    background: transparent;
+
+    box-shadow: none;
+
+    min-height: 64px;
+}
+
+
+/* =========================================================
+   BLANK PLAYER CONTENT
+========================================================= */
+
+.blank-player-content {
+    width: 100%;
+
+    text-align: center;
+
+    color: #999;
+
+    font-size: 14px;
+
+    font-weight: 600;
+}
+
+
+/* =========================================================
+   CONNECTION ARROW
+========================================================= */
+
+.teammate-connection-arrow {
+    width: 100%;
+
+    text-align: center;
+
+    height: 20px;
+
+    line-height: 20px;
+
+    color: #999;
+
+    font-size: 16px;
+
+    font-weight: 700;
+}
+
+
+/* =========================================================
+   COMPLETED CONNECTION
+========================================================= */
+
+.teammate-row.connected {
+    border-color: #28a745;
+}
+
+
+/* =========================================================
+   ERROR
+========================================================= */
+
+.teammate-error {
+    color: #d93025;
+}
+
+
+/* =========================================================
+   SUCCESS
+========================================================= */
+
+.teammate-success {
+    color: #28a745;
+}
+
+
+/* =========================================================
+   RESULT CARD
+========================================================= */
+
+.teammate-container .result-card {
+    max-width: 300px;
+}
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 480px) {
+
+    .teammate-row {
+        padding: 8px;
+    }
+
+    .teammate-headshot {
+        width: 38px;
+        height: 38px;
+
+        margin-right: 8px;
+    }
+
+    .teammate-player-name {
+        font-size: 14px;
+    }
+
+    .teammate-player-subtext {
+        font-size: 11px;
+    }
+
+    .teammate-row-label {
+        width: 75px;
+
+        font-size: 10px;
+    }
+
+    .blank-player-content {
+        font-size: 13px;
+    }
+
+}
