@@ -280,44 +280,23 @@ function setGameDate() {
         return;
     }
 
-
     const date =
         getEasternDateString();
-
 
     const parts =
         date.split("-");
 
-
     const year =
-        Number(parts[0]);
-
+        parts[0];
 
     const month =
-        Number(parts[1]);
-
+        parts[1];
 
     const day =
-        Number(parts[2]);
-
-
-    const display =
-        new Date(
-            year,
-            month - 1,
-            day
-        ).toLocaleDateString(
-            "en-US",
-            {
-                month: "short",
-                day: "numeric",
-                year: "numeric"
-            }
-        );
-
+        parts[2];
 
     teammateGameDate.textContent =
-        display;
+        `${month}/${day}/${year}`;
 
 }
 
@@ -2026,7 +2005,7 @@ function renderBoard() {
             blank.innerHTML = `
 
                 <div class="blank-player-content">
-                    Blank Player
+                    Guess Teammmate
                 </div>
 
             `;
@@ -2278,7 +2257,7 @@ function appendArrow() {
 
 
     arrow.textContent =
-        "↓";
+        "";
 
 
     teammateBoard.appendChild(
@@ -2368,7 +2347,7 @@ function renderLoadingBoard() {
         <div class="teammate-row blank-player">
 
             <div class="blank-player-content">
-                Blank Player
+                Guess Teammate
             </div>
 
         </div>
