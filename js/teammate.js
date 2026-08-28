@@ -4889,6 +4889,11 @@ async function selectPlayer(
     player
 ) {
 
+    showMessage(
+                "",
+                true
+            );
+
     if (
         teammateLocked ||
         !teammateInitialized ||
@@ -5965,75 +5970,7 @@ async function giveUp() {
 
 
     /*
-     * Show the saved solution directly on the board.
-     *
-     * teammateSolutionPath was already loaded from
-     * teammateGames.solutionPath by loadTeammateDailyGame().
-     *
-     * We do NOT calculate a new solution here.
-     */
-
-    if (
-        Array.isArray(
-            teammateSolutionPath
-        ) &&
-        teammateSolutionPath.length
-    ) {
-
-        teammatePath =
-            teammateSolutionPath.map(
-                player =>
-                    player
-                        ? {
-                            ...player
-                        }
-                        : null
-            );
-
-
-        /*
-         * Make sure Start and End are the actual
-         * daily-game player objects.
-         */
-
-        if (
-            teammateStartPlayer &&
-            teammatePath.length
-        ) {
-
-            teammatePath[0] =
-                teammateStartPlayer;
-
-        }
-
-
-        if (
-            teammateEndPlayer &&
-            teammatePath.length > 1
-        ) {
-
-            teammatePath[
-                teammatePath.length - 1
-            ] =
-                teammateEndPlayer;
-
-        }
-
-
-        renderBoard();
-
-    }
-    else {
-
-        console.warn(
-            "No saved Teammate solution path is available."
-        );
-
-    }
-
-
-    /*
-     * Save the player's completed game.
+     * Save the player's current game first.
      */
 
     await saveTeammateProgress(
@@ -6043,13 +5980,137 @@ async function giveUp() {
 
 
     /*
-     * Popup remains the result popup.
-     * The solution itself is displayed on the board.
+     * =====================================================
+     * LOAD THE SAVED SOLUTION
+     * =====================================================
+     *
+     * The solution was already loaded from teammateGames
+     * during loadTeammateDailyGame().
+     *
+     * If it somehow isn't available in memory, reload the
+     * daily game from Supabase so we can get solutionPath.
+     */
+
+    let solutionPath =
+        teammateSolutionPath;
+
+
+    if (
+        !Array.isArray(
+            solutionPath
+        ) ||
+        !solutionPath.length
+    ) {
+
+        console.log(
+            "Solution not currently in memory. Reloading daily game..."
+        );
+
+
+        const {
+            data,
+            error
+        } =
+            await db
+            .from("teammateGames")
+            .select("solutionPath")
+            .eq(
+                "date",
+                teammateSelectedDate
+            )
+            .maybeSingle();
+
+
+        if (
+            error
+        ) {
+
+            console.error(
+                "Could not reload Teammate solution:",
+                error
+            );
+
+        }
+        else if (
+            data &&
+            Array.isArray(
+                data.solutionPath
+            ) &&
+            data.solutionPath.length
+        ) {
+
+            solutionPath =
+                restoreTeammateSolutionPath(
+                    data.solutionPath
+                );
+
+
+            teammateSolutionPath =
+                solutionPath;
+
+
+            console.log(
+                "Teammate solution reloaded from database:",
+                solutionPath
+            );
+
+        }
+
+    }
+
+
+    /*
+     * =====================================================
+     * RENDER SOLUTION ON BOARD
+     * =====================================================
+     */
+
+    if (
+        Array.isArray(
+            solutionPath
+        ) &&
+        solutionPath.length
+    ) {
+
+        teammatePath =
+            solutionPath.map(
+                player =>
+                    player
+                        ? {
+                            ...player
+                        }
+                        : null
+            );
+
+
+        console.log(
+            "Rendering Teammate solution on board:",
+            teammatePath
+        );
+
+
+        renderBoard();
+
+    }
+    else {
+
+        console.warn(
+            "No Teammate solution path available to render."
+        );
+
+    }
+
+
+    /*
+     * Show the result popup.
+     *
+     * The solution itself is now displayed on the board.
      */
 
     showResult();
 
 }
+
 
 
 /* =========================================================
