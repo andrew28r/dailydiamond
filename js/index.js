@@ -1472,6 +1472,20 @@ async function loadGameHub(){
         console.log("Diamondle error:", diamondleError);
     }
 
+    
+
+    const { data: teammateGame, error: teammateError } = await db
+        .from("teammatePlayerGames")
+        .select("*")
+        .eq("playerId", playerId)
+        .eq("date", today)
+        .maybeSingle();
+
+
+    if(teammateError){
+        console.log("Teammate error:", teammateError);
+    }
+
 
 /*
     updateHubStatus(
@@ -1484,6 +1498,11 @@ async function loadGameHub(){
         "diamondleStatus",
         diamondleGame
     );
+
+    updateHubStatus(
+      "teammateStatus",
+      teammateGame
+  );
 
 }
 
@@ -1561,5 +1580,14 @@ document.getElementById("diamondlePlayBtn")
 .addEventListener("click", () => {
 
     window.location.href = "indexDiamondle.html";
+
+});
+
+
+
+document.getElementById("teammatePlayBtn")
+.addEventListener("click", () => {
+
+    window.location.href = "indexTeammates.html";
 
 });

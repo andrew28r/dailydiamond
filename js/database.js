@@ -575,3 +575,675 @@ window.createPlayer = createPlayer;
 window.playerGames = playerGames;
 window.updateGamesPlayed = updateGamesPlayed;
 window.getEasternDateString = getEasternDateString;
+
+
+
+
+
+/* =========================================================
+   TEAMMATE PLAYER DATA
+========================================================= */
+
+async function createTeammatePlayer(playerId) {
+
+    if (!playerId) {
+        console.error(
+            "Cannot create Teammate player without playerId."
+        );
+
+        return null;
+    }
+
+    const playerIdString =
+        String(playerId);
+
+
+    const {
+        data: existingPlayer,
+        error: checkError
+    } = await db
+        .from("teammatePlayerData")
+        .select("*")
+        .eq(
+            "playerId",
+            playerIdString
+        )
+        .maybeSingle();
+
+
+    if (checkError) {
+
+        console.error(
+            "Teammate player check error:",
+            checkError
+        );
+
+        return null;
+    }
+
+
+    if (existingPlayer) {
+        return existingPlayer;
+    }
+
+
+    const {
+        data,
+        error
+    } = await db
+        .from("teammatePlayerData")
+        .insert([
+            {
+                playerId:
+                    playerIdString,
+
+                gamesplayed: 0,
+
+                wins: 0,
+
+                streak: 0,
+
+                guest: true
+            }
+        ])
+        .select()
+        .single();
+
+
+    if (error) {
+
+        console.error(
+            "Teammate player creation error:",
+            error
+        );
+
+        return null;
+    }
+
+
+    console.log(
+        "Teammate player created:",
+        data
+    );
+
+
+    return data;
+}
+
+
+/* =========================================================
+   TEAMMATE PLAYER GAMES
+========================================================= */
+
+async function teammatePlayerGames(date) {
+
+    const playerId =
+        localStorage.getItem("playerId");
+
+
+    if (!playerId) {
+
+        console.warn(
+            "No playerId found while loading Teammate game."
+        );
+
+        return null;
+    }
+
+
+    const {
+        data,
+        error
+    } = await db
+        .from("teammatePlayerGames")
+        .select("*")
+        .eq(
+            "playerId",
+            String(playerId)
+        )
+        .eq(
+            "date",
+            date
+        )
+        .maybeSingle();
+
+
+    if (error) {
+
+        console.error(
+            "Teammate player game load error:",
+            error
+        );
+
+        return null;
+    }
+
+
+    console.log(
+        "Teammate saved game loaded:",
+        data
+    );
+
+
+    return data;
+}
+
+
+/* =========================================================
+   SAVE TEAMMATE PLAYER GAME
+========================================================= */
+
+async function saveTeammatePlayerGame(
+    date,
+    guesses,
+    win,
+    completed,
+    completedSameDay
+) {
+
+    const playerId =
+        localStorage.getItem("playerId");
+
+
+    if (!playerId) {
+
+        console.error(
+            "No playerId found. " +
+            "Teammate game cannot be saved."
+        );
+
+        return null;
+    }
+
+
+    const playerIdString =
+        String(playerId);
+
+
+    /* -----------------------------------------------------
+       MAKE SURE PLAYER PROFILE EXISTS
+    ----------------------------------------------------- */
+
+    const playerProfile =
+        await createTeammatePlayer(
+            playerIdString
+        );
+
+
+    if (!playerProfile) {
+
+        console.error(
+            "Could not create/find Teammate player profile."
+        );
+
+        return null;
+    }
+
+
+    /* -----------------------------------------------------
+       CLEAN GUESSES
+    ----------------------------------------------------- */
+
+    const cleanGuesses =
+        Array.isArray(guesses)
+            ? guesses
+                .filter(
+                    guess =>
+                        guess &&
+                        guess.player &&
+                        guess.player.id
+                )
+                .map(
+                    guess => ({
+
+                        playerId:
+                            Number(
+                                guess.player.id
+                            ),
+
+                        playerName:
+                            String(
+                                guess.player.name ||
+                                ""
+                            ),
+
+                        correct:
+                            guess.correct === true,
+
+                        intermediate:
+                            guess.intermediate === true
+
+                    })
+                )
+            : [];
+
+
+    /* -----------------------------------------------------
+       BUILD DATABASE ROW
+    ----------------------------------------------------- */
+
+    const payload = {
+
+        playerId:
+            playerIdString,
+
+        date:
+            date,
+
+        guesses:
+            cleanGuesses,
+
+        guessesnumber:
+            cleanGuesses.length,
+
+        win:
+            win === true,
+
+        completed:
+            completed === true,
+
+        completedsameday:
+            completedSameDay === true
+
+    };
+
+
+    console.log(
+        "======================================"
+    );
+
+    console.log(
+        "Saving Teammate game..."
+    );
+
+    console.log(
+        "Payload:",
+        payload
+    );
+
+    console.log(
+        "======================================"
+    );
+
+
+    /* -----------------------------------------------------
+       UPSERT
+    ----------------------------------------------------- */
+
+    const {
+        data,
+        error
+    } = await db
+        .from("teammatePlayerGames")
+        .upsert(
+            payload,
+            {
+                onConflict:
+                    "playerId,date"
+            }
+        )
+        .select()
+        .single();
+
+
+    /* -----------------------------------------------------
+       HANDLE ERROR
+    ----------------------------------------------------- */
+
+    if (error) {
+
+        console.error(
+            "======================================"
+        );
+
+        console.error(
+            "TEAMMATE GAME SAVE FAILED"
+        );
+
+        console.error(
+            "Error:",
+            error
+        );
+
+        console.error(
+            "Message:",
+            error.message
+        );
+
+        console.error(
+            "Details:",
+            error.details
+        );
+
+        console.error(
+            "Hint:",
+            error.hint
+        );
+
+        console.error(
+            "Payload:",
+            payload
+        );
+
+        console.error(
+            "======================================"
+        );
+
+        return null;
+    }
+
+
+    /* -----------------------------------------------------
+       SUCCESS
+    ----------------------------------------------------- */
+
+    console.log(
+        "======================================"
+    );
+
+    console.log(
+        "TEAMMATE GAME SAVED SUCCESSFULLY"
+    );
+
+    console.log(
+        data
+    );
+
+    console.log(
+        "======================================"
+    );
+
+
+    /* -----------------------------------------------------
+       UPDATE LIFETIME STATS
+    ----------------------------------------------------- */
+
+    if (completed === true) {
+
+        await updateTeammatePlayerData(
+            playerIdString
+        );
+
+    }
+
+
+    return data;
+}
+
+
+/* =========================================================
+   UPDATE TEAMMATE PLAYER DATA
+========================================================= */
+
+async function updateTeammatePlayerData(
+    playerId
+) {
+
+    if (!playerId) {
+        return;
+    }
+
+
+    const playerIdString =
+        String(playerId);
+
+
+    const {
+        data: games,
+        error
+    } = await db
+        .from("teammatePlayerGames")
+        .select("*")
+        .eq(
+            "playerId",
+            playerIdString
+        )
+        .order(
+            "date",
+            {
+                ascending: false
+            }
+        );
+
+
+    if (error) {
+
+        console.error(
+            "Teammate player games stats error:",
+            error
+        );
+
+        return;
+    }
+
+
+    const allGames =
+        Array.isArray(games)
+            ? games
+            : [];
+
+
+    /* -----------------------------------------------------
+       GAMES PLAYED
+    ----------------------------------------------------- */
+
+    const gamesPlayed =
+        allGames.length;
+
+
+    /* -----------------------------------------------------
+       WINS
+    ----------------------------------------------------- */
+
+    const wins =
+        allGames.filter(
+            game =>
+                game.win === true ||
+                game.win === "true"
+        ).length;
+
+
+    /* -----------------------------------------------------
+       STREAK
+    ----------------------------------------------------- */
+
+    let streak = 0;
+
+
+    let expectedDate =
+        getEasternDateString();
+
+
+    for (
+        let i = 0;
+        i < 100;
+        i++
+    ) {
+
+        const dayGame =
+            allGames.find(
+                game =>
+                    game.date ===
+                    expectedDate
+            );
+
+
+        if (!dayGame) {
+            break;
+        }
+
+
+        const completed =
+            dayGame.completed === true ||
+            dayGame.completed === "true";
+
+
+        const win =
+            dayGame.win === true ||
+            dayGame.win === "true";
+
+
+        const completedSameDay =
+            dayGame.completedsameday === true ||
+            dayGame.completedsameday === "true";
+
+
+        if (!completed) {
+            break;
+        }
+
+
+        /*
+         * Today's game is allowed automatically.
+         *
+         * Previous games must have been completed
+         * on their actual game date.
+         */
+
+        if (
+            expectedDate !==
+                getEasternDateString() &&
+            !completedSameDay
+        ) {
+
+            break;
+        }
+
+
+        /*
+         * A loss breaks the streak.
+         */
+
+        if (!win) {
+            break;
+        }
+
+
+        streak++;
+
+
+        /*
+         * Move to previous day.
+         */
+
+        const [
+            year,
+            month,
+            day
+        ] =
+            expectedDate
+                .split("-")
+                .map(Number);
+
+
+        const previousDate =
+            new Date(
+                Date.UTC(
+                    year,
+                    month - 1,
+                    day
+                )
+            );
+
+
+        previousDate.setUTCDate(
+            previousDate.getUTCDate() - 1
+        );
+
+
+        expectedDate =
+            [
+                previousDate.getUTCFullYear(),
+
+                String(
+                    previousDate.getUTCMonth() + 1
+                ).padStart(2, "0"),
+
+                String(
+                    previousDate.getUTCDate()
+                ).padStart(2, "0")
+
+            ].join("-");
+    }
+
+
+    /* -----------------------------------------------------
+       UPDATE TEAMMATE PLAYER DATA
+    ----------------------------------------------------- */
+
+    const {
+        error: updateError
+    } = await db
+        .from("teammatePlayerData")
+        .upsert(
+            {
+                playerId:
+                    playerIdString,
+
+                gamesplayed:
+                    Number(
+                        gamesPlayed
+                    ),
+
+                wins:
+                    Number(
+                        wins
+                    ),
+
+                streak:
+                    Number(
+                        streak
+                    )
+            },
+            {
+                onConflict:
+                    "playerId"
+            }
+        );
+
+
+    if (updateError) {
+
+        console.error(
+            "Teammate player data update error:",
+            updateError
+        );
+
+        return;
+    }
+
+
+    console.log(
+        "Teammate player stats updated:",
+        {
+            playerId:
+                playerIdString,
+
+            gamesPlayed,
+
+            wins,
+
+            streak
+        }
+    );
+}
+
+
+/* =========================================================
+   TEAMMATE GLOBAL FUNCTIONS
+========================================================= */
+
+window.createTeammatePlayer =
+    createTeammatePlayer;
+
+
+window.teammatePlayerGames =
+    teammatePlayerGames;
+
+
+window.saveTeammatePlayerGame =
+    saveTeammatePlayerGame;
+
+
+window.updateTeammatePlayerData =
+    updateTeammatePlayerData;

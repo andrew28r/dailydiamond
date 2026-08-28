@@ -110,32 +110,79 @@
 
 
 
-  <div class="hub-card" id="diamondleHubCard" style="display:none;">
+  <div class="hub-container">
 
-    <div class="hub-content">
+    <!-- =========================
+        TEAMMATE CONNECTION
+    ========================== -->
 
-      <h3 class="hub-title">
-        Around The Diamond
-      </h3>
+    <div class="hub-card" id="teammateHubCard" style="display:none;">
 
-      <p class="hub-description">
-        Guess the hidden MLB player.
-      </p>
+      <div class="hub-content">
 
-      <div id="NewGameTag" class="hub-status hub-NewGame">
+        <h3 class="hub-title">
+          Teammates
+        </h3>
+
+        <p class="hub-description">
+          Connect two MLB players through their teammates.
+        </p>
+
+        <div id="NewGameTag" class="hub-status hub-NewGame">
           New Game
+        </div>
+
+        <div id="teammateStatus" class="hub-status hub-incomplete">
+        </div>
+
       </div>
-      <div id="diamondleStatus" class="hub-status hub-incomplete">
-        
+
+      <button
+        class="hub-action"
+        id="teammatePlayBtn">
+        Play
+      </button>
+
+    </div>
+    <!-- =========================
+        AROUND THE DIAMOND
+    ========================== -->
+
+    <div class="hub-card" id="diamondleHubCard" style="display:none;">
+
+      <div class="hub-content">
+
+        <h3 class="hub-title">
+          Around The Diamond
+        </h3>
+
+        <p class="hub-description">
+          Guess the hidden MLB player.
+        </p>
+
+        <!--<div id="NewGameTag" class="hub-status hub-NewGame">
+          New Game
+        </div>-->
+
+        <div id="diamondleStatus" class="hub-status hub-incomplete">
+        </div>
+
       </div>
+
+      <button
+        class="hub-action"
+        id="diamondlePlayBtn">
+        Play
+      </button>
 
     </div>
 
-    <button class="hub-action" id="diamondlePlayBtn">
-      Play
-    </button>
+
+
 
   </div>
+
+  
 
 
 </div>
@@ -313,6 +360,23 @@ document
 
 
 
+// Everyone can play Teammate Connection
+//document
+  //.getElementById("teammateHubCard")
+  //.style.display = "flex";
+// =====================
+// TEAMMATE CONNECTION ACCESS
+// =====================
+
+const teammateAllowedPlayerIds = [
+  "andrew28r"
+];
+
+if (teammateAllowedPlayerIds.includes(currentPlayerId)) {
+  document
+    .getElementById("teammateHubCard")
+    .style.display = "flex";
+}
 
 
 
@@ -320,15 +384,9 @@ document
 // BUTTONS
 // =====================
 
-
-document
-.getElementById("diamondlePlayBtn")
-.onclick = ()=>{
-
-    window.location.href="diamondle.html";
-
-};
-
+// =====================
+// BUTTONS
+// =====================
 
 
 
