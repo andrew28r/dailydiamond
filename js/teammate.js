@@ -39,6 +39,8 @@ let teammateEndPlayer = null;
 
 let teammatePath = [];
 
+let teammateSolutionPath = [];
+
 let teammateGuesses = [];
 
 let teammatePlayers = [];
@@ -438,6 +440,8 @@ function restoreSavedTeammateGame(
     savedGame
 ) {
 
+    teammateSolutionPath = [];
+
     teammatePath = [
 
         teammateStartPlayer,
@@ -648,11 +652,47 @@ async function loadTeammateDailyGame() {
 
 
         /*
-         * Remember this pair locally too.
+         * Load the solution directly from the
+         * database when it already exists.
          *
-         * If the database row is deleted later,
-         * the next generation can avoid this pair.
+         * It will NOT be recalculated.
          */
+
+        if (
+            Array.isArray(
+                data.solutionPath
+            ) &&
+            data.solutionPath.length
+        ) {
+
+            teammateSolutionPath =
+                restoreTeammateSolutionPath(
+                    data.solutionPath
+                );
+
+
+            console.log(
+                "Saved Teammate solution path loaded:",
+                teammateSolutionPath
+            );
+
+        }
+        else {
+
+            /*
+             * Older games may not have a solutionPath
+             * yet.
+             *
+             * Calculate it once and save it.
+             */
+
+            teammateSolutionPath =
+                await ensureTeammateSolutionPath(
+                    data
+                );
+
+        }
+
 
         rememberGeneratedPair(
             data.startPlayerId,
@@ -668,61 +708,55 @@ async function loadTeammateDailyGame() {
     /*
      * No game exists.
      *
-     * Generate a new one.
+     * Generate a completely new one.
+     *
+     * IMPORTANT:
+     * The random generation seed changes every time
+     * this function has to create a missing game.
+     *
+     * Therefore, deleting the database row and
+     * regenerating the game will produce a new puzzle.
      */
 
     console.log(
-        "Creating teammate game for:",
+        "Creating NEW teammate game for:",
         teammateSelectedDate
     );
 
 
-    /*showMessage(
-        "Finding eligible MLB players...",
-        false
-    );*/
-
-
-    const baseSeed =
-        teammateSeedFromDate(
-            teammateSelectedDate
-        );
-
-
-    /*
-     * Every time the database row has been deleted
-     * and the game is regenerated, increase the local
-     * generation number.
-     */
-
-    const generation =
-        getGenerationNumber();
-
-
-    /*
-     * The date determines the base game.
-     *
-     * The generation number changes the actual
-     * candidate ordering when a puzzle is regenerated.
-     */
-
     const generationSeed =
-        baseSeed +
-        (
-            generation *
-            104729
+        Math.floor(
+            Math.random() *
+            2147483647
         );
+
+
+    /*
+     * Randomly select the start and end seasons.
+     *
+     * This prevents regeneration from always using
+     * the same seasons for the same date.
+     */
+
+    const seasonRange =
+        TEAMMATE_MAX_SEASON -
+        TEAMMATE_MIN_SEASON +
+        1;
 
 
     const startSeason =
-        getSeededSeason(
-            baseSeed
+        TEAMMATE_MIN_SEASON +
+        Math.floor(
+            Math.random() *
+            seasonRange
         );
 
 
     const endSeason =
-        getSeededSeason(
-            baseSeed + 7919
+        TEAMMATE_MIN_SEASON +
+        Math.floor(
+            Math.random() *
+            seasonRange
         );
 
 
@@ -731,14 +765,10 @@ async function loadTeammateDailyGame() {
         {
             startSeason,
             endSeason,
-            generation
+            generationSeed
         }
     );
 
-
-    /*
-     * Load the season player lists.
-     */
 
     const [
         startSeasonPlayers,
@@ -767,17 +797,6 @@ async function loadTeammateDailyGame() {
         );
 
     }
-
-
-    /*
-     * Filter candidates by CAREER games
-     * and real headshot availability.
-     */
-
-    /*showMessage(
-        "Checking career game totals...",
-        false
-    );*/
 
 
     const eligibleStartPlayers =
@@ -818,15 +837,9 @@ async function loadTeammateDailyGame() {
     }
 
 
-    /*showMessage(
-        "Finding today's connection...",
-        false
-    );*/
-
-
     /*
-     * Load the previously generated pair from
-     * localStorage, if there is one.
+     * Get the previously generated pair so we can
+     * avoid recreating the same pair when possible.
      */
 
     const previousPair =
@@ -852,7 +865,7 @@ async function loadTeammateDailyGame() {
 
 
     console.log(
-        "Selected teammate connection:",
+        "Selected NEW teammate connection:",
         {
             start:
                 foundPair.start.name,
@@ -860,13 +873,42 @@ async function loadTeammateDailyGame() {
             end:
                 foundPair.end.name,
 
-            generation
+            generationSeed
         }
     );
 
 
     /*
-     * Save the daily puzzle.
+     * Find the shortest solution BEFORE inserting
+     * the daily game.
+     */
+
+    const solution =
+        await findTeammateSolutionPath(
+            foundPair.start.id,
+            foundPair.end.id
+        );
+
+
+    if (
+        !solution ||
+        !solution.length
+    ) {
+
+        throw new Error(
+            "Could not find a solution path for the selected players."
+        );
+
+    }
+
+
+    teammateSolutionPath =
+        solution;
+
+
+    /*
+     * Save the daily puzzle AND its solution
+     * in the same database row.
      */
 
     const {
@@ -896,7 +938,12 @@ async function loadTeammateDailyGame() {
                 foundPair.end.name,
 
             endPlayerInfo:
-                foundPair.end.raw
+                foundPair.end.raw,
+
+            solutionPath:
+                serializeTeammateSolutionPath(
+                    solution
+                )
 
         })
         .select()
@@ -905,7 +952,8 @@ async function loadTeammateDailyGame() {
 
     /*
      * Another user may have created
-     * the same daily puzzle.
+     * the same daily puzzle at the
+     * same time.
      */
 
     if (insertError) {
@@ -952,6 +1000,34 @@ async function loadTeammateDailyGame() {
                 );
 
 
+            /*
+             * Use the database solution if the
+             * other client already saved it.
+             */
+
+            if (
+                Array.isArray(
+                    existingGame.solutionPath
+                ) &&
+                existingGame.solutionPath.length
+            ) {
+
+                teammateSolutionPath =
+                    restoreTeammateSolutionPath(
+                        existingGame.solutionPath
+                    );
+
+            }
+            else {
+
+                teammateSolutionPath =
+                    await ensureTeammateSolutionPath(
+                        existingGame
+                    );
+
+            }
+
+
             rememberGeneratedPair(
                 existingGame.startPlayerId,
                 existingGame.endPlayerId
@@ -974,7 +1050,7 @@ async function loadTeammateDailyGame() {
 
 
     /*
-     * Successfully created today's game.
+     * Successfully created the new daily game.
      */
 
     teammateStartPlayer =
@@ -993,6 +1069,12 @@ async function loadTeammateDailyGame() {
         );
 
 
+    teammateSolutionPath =
+        restoreTeammateSolutionPath(
+            insertedGame.solutionPath
+        );
+
+
     rememberGeneratedPair(
         insertedGame.startPlayerId,
         insertedGame.endPlayerId
@@ -1000,7 +1082,7 @@ async function loadTeammateDailyGame() {
 
 
     console.log(
-        "Created teammate daily game:",
+        "Created NEW teammate daily game:",
         insertedGame
     );
 
@@ -1024,7 +1106,7 @@ async function populateUpcomingTeammateGames() {
 
         for (
             let offset = 0;
-            offset < 3;
+            offset < 5;
             offset++
         ) {
 
@@ -1149,7 +1231,7 @@ async function generateTeammateGameForDate(
     } =
         await db
         .from("teammateGames")
-        .select("date")
+        .select("*")
         .eq(
             "date",
             dateString
@@ -1164,55 +1246,90 @@ async function generateTeammateGameForDate(
     }
 
 
+    /*
+     * Existing database row is ALWAYS the source
+     * of truth.
+     */
+
     if (existingGame) {
+
+        /*
+         * If the game already exists but its solution
+         * is missing, create it once.
+         */
+
+        if (
+            !Array.isArray(
+                existingGame.solutionPath
+            ) ||
+            !existingGame.solutionPath.length
+        ) {
+
+            await ensureTeammateSolutionPath(
+                existingGame
+            );
+
+        }
+
 
         console.log(
             `Game already exists for ${dateString}.`
         );
+
 
         return existingGame;
 
     }
 
 
-    const baseSeed =
-        teammateSeedFromDate(
-            dateString
-        );
-
-
-    const generation =
-        getGenerationNumberForDate(
-            dateString
-        );
-
+    /*
+     * No database row exists.
+     *
+     * Generate a completely NEW random game.
+     */
 
     const generationSeed =
-        baseSeed +
-        (
-            generation *
-            104729
+        Math.floor(
+            Math.random() *
+            2147483647
         );
+
+
+    /*
+     * Randomly select the seasons.
+     *
+     * This means deleting a row and regenerating it
+     * will not always use the same start/end seasons.
+     */
+
+    const seasonRange =
+        TEAMMATE_MAX_SEASON -
+        TEAMMATE_MIN_SEASON +
+        1;
 
 
     const startSeason =
-        getSeededSeason(
-            baseSeed
+        TEAMMATE_MIN_SEASON +
+        Math.floor(
+            Math.random() *
+            seasonRange
         );
 
 
     const endSeason =
-        getSeededSeason(
-            baseSeed + 7919
+        TEAMMATE_MIN_SEASON +
+        Math.floor(
+            Math.random() *
+            seasonRange
         );
 
 
     console.log(
-        `Generating ${dateString}:`,
+        `Generating NEW Teammate game for ${dateString}:`,
         {
             startSeason,
             endSeason,
-            generation
+            generationSeed
         }
     );
 
@@ -1287,7 +1404,8 @@ async function generateTeammateGameForDate(
 
 
     /*
-     * Check the previously generated pair for THIS DATE.
+     * Get the previously generated pair so the
+     * new generation can avoid recreating it.
      */
 
     const previousPair =
@@ -1314,8 +1432,54 @@ async function generateTeammateGameForDate(
     }
 
 
+    console.log(
+        `Selected NEW teammate connection for ${dateString}:`,
+        {
+            start:
+                foundPair.start.name,
+
+            end:
+                foundPair.end.name,
+
+            generationSeed
+        }
+    );
+
+
     /*
-     * Insert the game.
+     * Find the shortest solution before saving
+     * the game.
+     */
+
+    console.log(
+        `Finding solution for ${dateString}:`,
+        foundPair.start.name,
+        "→",
+        foundPair.end.name
+    );
+
+
+    const solution =
+        await findTeammateSolutionPath(
+            foundPair.start.id,
+            foundPair.end.id
+        );
+
+
+    if (
+        !solution ||
+        !solution.length
+    ) {
+
+        throw new Error(
+            `Could not find a solution path for ${dateString}.`
+        );
+
+    }
+
+
+    /*
+     * Insert the game WITH solutionPath.
      */
 
     const {
@@ -1345,7 +1509,12 @@ async function generateTeammateGameForDate(
                 foundPair.end.name,
 
             endPlayerInfo:
-                foundPair.end.raw
+                foundPair.end.raw,
+
+            solutionPath:
+                serializeTeammateSolutionPath(
+                    solution
+                )
 
         })
         .select()
@@ -1385,6 +1554,25 @@ async function generateTeammateGameForDate(
             }
 
 
+            /*
+             * If their row has no solutionPath,
+             * calculate it once and save it.
+             */
+
+            if (
+                !Array.isArray(
+                    existingAfterInsert.solutionPath
+                ) ||
+                !existingAfterInsert.solutionPath.length
+            ) {
+
+                await ensureTeammateSolutionPath(
+                    existingAfterInsert
+                );
+
+            }
+
+
             console.log(
                 `Another client created ${dateString} first.`
             );
@@ -1400,6 +1588,10 @@ async function generateTeammateGameForDate(
     }
 
 
+    /*
+     * Remember the newly generated pair.
+     */
+
     rememberGeneratedPairForDate(
         dateString,
         insertedGame.startPlayerId,
@@ -1408,10 +1600,21 @@ async function generateTeammateGameForDate(
 
 
     console.log(
-        `Successfully created Teammate game for ${dateString}:`,
+        `Successfully created NEW Teammate game for ${dateString}:`,
         insertedGame.startPlayerName,
         "→",
         insertedGame.endPlayerName
+    );
+
+
+    console.log(
+        `Solution:`,
+        solution.map(
+            player =>
+                player.name
+        ).join(
+            " → "
+        )
     );
 
 
@@ -3197,7 +3400,1007 @@ async function werePlayersTeammates(
 
 }
 
+/* =========================================================
+   SOLUTION PATH
+========================================================= */
 
+/*
+ * Cache of all players who were on a specific MLB team
+ * during a specific season.
+ *
+ * Key:
+ *     teamId-season
+ *
+ * Value:
+ *     Array of player objects
+ */
+
+const teammateTeamSeasonPlayerCache =
+    new Map();
+
+
+/*
+ * Get every MLB player who appeared for a team
+ * during a specific season.
+ *
+ * This is intentionally different from getPlayerTeams().
+ *
+ * getPlayerTeams() tells us:
+ *
+ *     "Which teams did this player play for?"
+ *
+ * This function tells us:
+ *
+ *     "Who else played for this team?"
+ */
+
+async function getTeamSeasonPlayers(
+    teamId,
+    season
+) {
+
+    if (
+        !teamId ||
+        !season
+    ) {
+
+        return [];
+
+    }
+
+
+    const cacheKey =
+        `${teamId}-${season}`;
+
+
+    if (
+        teammateTeamSeasonPlayerCache.has(
+            cacheKey
+        )
+    ) {
+
+        return teammateTeamSeasonPlayerCache.get(
+            cacheKey
+        );
+
+    }
+
+
+    try {
+
+        const url =
+            `${TEAMMATE_API}/teams/${teamId}/roster` +
+            `?season=${season}` +
+            `&rosterType=fullRoster` +
+            `&hydrate=person`;
+
+
+        const response =
+            await fetch(
+                url
+            );
+
+
+        if (!response.ok) {
+
+            console.warn(
+                `Could not load team roster: ${teamId}, ${season}`
+            );
+
+
+            teammateTeamSeasonPlayerCache.set(
+                cacheKey,
+                []
+            );
+
+
+            return [];
+
+        }
+
+
+        const data =
+            await response.json();
+
+
+        /*
+         * The MLB roster endpoint returns:
+         *
+         * {
+         *     roster: [...]
+         * }
+         *
+         * rather than:
+         *
+         * {
+         *     people: [...]
+         * }
+         */
+
+        const roster =
+            Array.isArray(
+                data.roster
+            )
+                ? data.roster
+                : [];
+
+
+        const players =
+            roster
+                .map(
+                    entry =>
+                        entry?.person
+                            ? entry.person
+                            : entry
+                )
+                .filter(
+                    person =>
+                        person &&
+                        person.id
+                )
+                .map(
+                    person =>
+                        normalizePlayer(
+                            person
+                        )
+                );
+
+
+        const unique =
+            [];
+
+
+        const seen =
+            new Set();
+
+
+        for (
+            const player of players
+        ) {
+
+            if (
+                seen.has(
+                    player.id
+                )
+            ) {
+
+                continue;
+
+            }
+
+
+            seen.add(
+                player.id
+            );
+
+
+            unique.push(
+                player
+            );
+
+        }
+
+
+        teammateTeamSeasonPlayerCache.set(
+            cacheKey,
+            unique
+        );
+
+
+        return unique;
+
+    }
+    catch (error) {
+
+        console.error(
+            `Team roster error for ${teamId}-${season}:`,
+            error
+        );
+
+
+        teammateTeamSeasonPlayerCache.set(
+            cacheKey,
+            []
+        );
+
+
+        return [];
+
+    }
+
+}
+
+
+/*
+ * Get every player who was a teammate of the
+ * supplied player.
+ *
+ * A teammate relationship is based on:
+ *
+ *     same MLB team
+ *     same MLB season
+ *
+ * This uses the player's complete team history,
+ * not just the limited daily-game player pool.
+ */
+
+async function getAllTeammates(
+    playerId
+) {
+
+    if (!playerId) {
+
+        return [];
+
+    }
+
+
+    const teams =
+        await getPlayerTeams(
+            playerId
+        );
+
+
+    if (
+        !teams.length
+    ) {
+
+        return [];
+
+    }
+
+
+    /*
+     * Load all team/season player lists in parallel.
+     */
+
+    const teamSeasonResults =
+        await Promise.all(
+            teams.map(
+                teamSeason =>
+                    getTeamSeasonPlayers(
+                        teamSeason.teamId,
+                        teamSeason.year
+                    )
+            )
+        );
+
+
+    const teammates =
+        new Map();
+
+
+    for (
+        const players of teamSeasonResults
+    ) {
+
+        for (
+            const player of players
+        ) {
+
+            if (
+                !player ||
+                !player.id
+            ) {
+
+                continue;
+
+            }
+
+
+            /*
+             * Never return the player itself.
+             */
+
+            if (
+                Number(player.id) ===
+                Number(playerId)
+            ) {
+
+                continue;
+
+            }
+
+
+            teammates.set(
+                Number(player.id),
+                player
+            );
+
+        }
+
+    }
+
+
+    return Array.from(
+        teammates.values()
+    );
+
+}
+
+
+/*
+ * Find the SHORTEST possible teammate path.
+ *
+ * This is a breadth-first search.
+ *
+ * Example:
+ *
+ *     Start
+ *       ↓
+ *     A B C
+ *
+ * First we check:
+ *
+ *     A → End
+ *     B → End
+ *     C → End
+ *
+ * If none work, we expand A/B/C and check
+ * the next level.
+ *
+ * Because we completely finish one level before
+ * moving to the next, the first solution found
+ * is always the shortest solution.
+ */
+
+async function findTeammateSolutionPath(
+    startPlayerId,
+    endPlayerId
+) {
+
+    const startId =
+        Number(
+            startPlayerId
+        );
+
+
+    const endId =
+        Number(
+            endPlayerId
+        );
+
+
+    if (
+        !startId ||
+        !endId
+    ) {
+
+        return null;
+
+    }
+
+
+    if (
+        startId ===
+        endId
+    ) {
+
+        return null;
+
+    }
+
+
+    /*
+     * Make sure we have player objects for the
+     * Start and End.
+     */
+
+    const startPlayer =
+        teammateStartPlayer &&
+        Number(teammateStartPlayer.id) === startId
+            ? teammateStartPlayer
+            : await getPlayer(startId);
+
+
+    const endPlayer =
+        teammateEndPlayer &&
+        Number(teammateEndPlayer.id) === endId
+            ? teammateEndPlayer
+            : await getPlayer(endId);
+
+
+    if (
+        !startPlayer ||
+        !endPlayer
+    ) {
+
+        return null;
+
+    }
+
+
+    /*
+     * Each queue item contains:
+     *
+     *     player
+     *     path
+     *
+     * The path includes Start and the current
+     * player.
+     */
+
+    const queue = [];
+
+
+    const visited =
+        new Set();
+
+
+    visited.add(
+        startId
+    );
+
+
+    /*
+     * Start by finding ALL teammates of Start.
+     */
+
+    const startTeammates =
+        await getAllTeammates(
+            startId
+        );
+
+
+    console.log(
+        `Solution search: Start has ${startTeammates.length} teammates.`
+    );
+
+
+    /*
+     * DIRECT CONNECTION
+     *
+     * This normally cannot happen because your
+     * daily-game generator specifically prevents
+     * Start and End from being direct teammates.
+     *
+     * We still handle it safely.
+     */
+
+    for (
+        const teammate of startTeammates
+    ) {
+
+        if (
+            Number(teammate.id) ===
+            endId
+        ) {
+
+            console.log(
+                "Solution found with direct Start → End connection."
+            );
+
+
+            return [
+
+                startPlayer,
+
+                endPlayer
+
+            ];
+
+        }
+
+    }
+
+
+    /*
+     * Add Start's teammates as the first
+     * intermediate level.
+     */
+
+    for (
+        const teammate of startTeammates
+    ) {
+
+        const teammateId =
+            Number(
+                teammate.id
+            );
+
+
+        if (
+            visited.has(
+                teammateId
+            )
+        ) {
+
+            continue;
+
+        }
+
+
+        visited.add(
+            teammateId
+        );
+
+
+        queue.push({
+
+            player:
+                teammate,
+
+            path: [
+
+                startPlayer,
+
+                teammate
+
+            ]
+
+        });
+
+    }
+
+
+    /*
+     * Breadth-first search.
+     */
+
+    while (
+        queue.length
+    ) {
+
+        /*
+         * Grab the entire current level.
+         *
+         * Every item currently in the queue has
+         * the same path length.
+         */
+
+        const currentLevelSize =
+            queue.length;
+
+
+        const currentLevel =
+            queue.splice(
+                0,
+                currentLevelSize
+            );
+
+
+        console.log(
+            `Searching solution level with ${currentLevel.length} nodes.`
+        );
+
+
+        /*
+         * FIRST:
+         *
+         * Check every node at this level against End.
+         *
+         * This guarantees we stop at the shortest
+         * possible solution.
+         */
+
+        for (
+            const node of currentLevel
+        ) {
+
+            if (
+                Number(node.player.id) ===
+                endId
+            ) {
+
+                return [
+
+                    ...node.path.slice(
+                        0,
+                        -1
+                    ),
+
+                    endPlayer
+
+                ];
+
+            }
+
+
+            const connectsToEnd =
+                await werePlayersTeammates(
+                    node.player.id,
+                    endId
+                );
+
+
+            if (
+                connectsToEnd
+            ) {
+
+                console.log(
+                    "Solution found:",
+                    node.path.map(
+                        player =>
+                            player.name
+                    ).join(
+                        " → "
+                    ),
+                    "→",
+                    endPlayer.name
+                );
+
+
+                return [
+
+                    ...node.path,
+
+                    endPlayer
+
+                ];
+
+            }
+
+        }
+
+
+        /*
+         * No node at this level connects to End.
+         *
+         * Now expand all nodes to create the
+         * NEXT level.
+         */
+
+        const nextLevelResults =
+            await Promise.all(
+                currentLevel.map(
+                    async node => {
+
+                        const teammates =
+                            await getAllTeammates(
+                                node.player.id
+                            );
+
+
+                        return {
+
+                            node,
+
+                            teammates
+
+                        };
+
+                    }
+                )
+            );
+
+
+        for (
+            const result of nextLevelResults
+        ) {
+
+            const node =
+                result.node;
+
+
+            for (
+                const teammate of result.teammates
+            ) {
+
+                const teammateId =
+                    Number(
+                        teammate.id
+                    );
+
+
+                /*
+                 * Already visited means another
+                 * shorter/equal path already reached
+                 * this player.
+                 */
+
+                if (
+                    visited.has(
+                        teammateId
+                    )
+                ) {
+
+                    continue;
+
+                }
+
+
+                visited.add(
+                    teammateId
+                );
+
+
+                queue.push({
+
+                    player:
+                        teammate,
+
+                    path: [
+
+                        ...node.path,
+
+                        teammate
+
+                    ]
+
+                });
+
+            }
+
+        }
+
+
+        console.log(
+            `Next solution level contains ${queue.length} nodes.`
+        );
+
+    }
+
+
+    /*
+     * No path exists.
+     */
+
+    console.warn(
+        `No teammate solution found from ${startId} to ${endId}.`
+    );
+
+
+    return null;
+
+}
+
+
+/*
+ * Convert a solution path into the compact JSON
+ * we actually store in Supabase.
+ *
+ * We only need ID + name.
+ */
+
+function serializeTeammateSolutionPath(
+    path
+) {
+
+    if (
+        !Array.isArray(path)
+    ) {
+
+        return [];
+
+    }
+
+
+    return path
+        .filter(
+            player =>
+                player &&
+                player.id
+        )
+        .map(
+            player => ({
+
+                id:
+                    Number(
+                        player.id
+                    ),
+
+                name:
+                    String(
+                        player.name ||
+                        ""
+                    )
+
+            })
+        );
+
+}
+
+
+/*
+ * Convert solutionPath loaded from Supabase
+ * back into the player-object format used by
+ * the UI.
+ */
+
+function restoreTeammateSolutionPath(
+    solutionPath
+) {
+
+    if (
+        !Array.isArray(solutionPath)
+    ) {
+
+        return [];
+
+    }
+
+
+    return solutionPath
+        .filter(
+            player =>
+                player &&
+                player.id
+        )
+        .map(
+            player => ({
+
+                id:
+                    Number(
+                        player.id
+                    ),
+
+                name:
+                    String(
+                        player.name ||
+                        ""
+                    )
+
+            })
+        );
+
+}
+
+
+/*
+ * Save solutionPath into the shared daily
+ * teammateGames row.
+ */
+
+async function saveTeammateSolutionPath(
+    date,
+    path
+) {
+
+    const serialized =
+        serializeTeammateSolutionPath(
+            path
+        );
+
+
+    if (
+        !serialized.length
+    ) {
+
+        console.error(
+            "Cannot save empty Teammate solution path."
+        );
+
+        return null;
+
+    }
+
+
+    const {
+        data,
+        error
+    } =
+        await db
+        .from("teammateGames")
+        .update({
+
+            solutionPath:
+                serialized
+
+        })
+        .eq(
+            "date",
+            date
+        )
+        .select()
+        .single();
+
+
+    if (error) {
+
+        console.error(
+            "Failed to save Teammate solution path:",
+            error
+        );
+
+
+        return null;
+
+    }
+
+
+    console.log(
+        "Teammate solution path saved:",
+        serialized
+    );
+
+
+    return data;
+
+}
+
+
+/*
+ * Make sure the daily game has a solution.
+ *
+ * If one is already saved in Supabase, use it.
+ *
+ * If not, calculate it once and save it.
+ */
+
+async function ensureTeammateSolutionPath(
+    dailyGame
+) {
+
+    if (
+        !dailyGame
+    ) {
+
+        return [];
+
+    }
+
+
+    /*
+     * IMPORTANT:
+     *
+     * Do NOT rebuild an existing solution.
+     */
+
+    if (
+        Array.isArray(
+            dailyGame.solutionPath
+        ) &&
+        dailyGame.solutionPath.length
+    ) {
+
+        const existingPath =
+            restoreTeammateSolutionPath(
+                dailyGame.solutionPath
+            );
+
+
+        if (
+            existingPath.length
+        ) {
+
+            teammateSolutionPath =
+                existingPath;
+
+
+            return existingPath;
+
+        }
+
+    }
+
+
+    console.log(
+        "No saved Teammate solutionPath. Finding shortest solution..."
+    );
+
+
+    const solution =
+        await findTeammateSolutionPath(
+            dailyGame.startPlayerId,
+            dailyGame.endPlayerId
+        );
+
+
+    if (
+        !solution ||
+        !solution.length
+    ) {
+
+        throw new Error(
+            "Could not find a solution path for today's Teammate game."
+        );
+
+    }
+
+
+    teammateSolutionPath =
+        solution;
+
+
+    await saveTeammateSolutionPath(
+        dailyGame.date,
+        solution
+    );
+
+
+    return solution;
+
+}
 /* =========================================================
    SEARCH
 ========================================================= */
@@ -4700,7 +5903,6 @@ function updateGuessCount() {
 
 }
 
-
 /* =========================================================
    GIVE UP
 ========================================================= */
@@ -4762,16 +5964,97 @@ async function giveUp() {
     hideDropdown();
 
 
+    /*
+     * Show the saved solution directly on the board.
+     *
+     * teammateSolutionPath was already loaded from
+     * teammateGames.solutionPath by loadTeammateDailyGame().
+     *
+     * We do NOT calculate a new solution here.
+     */
+
+    if (
+        Array.isArray(
+            teammateSolutionPath
+        ) &&
+        teammateSolutionPath.length
+    ) {
+
+        teammatePath =
+            teammateSolutionPath.map(
+                player =>
+                    player
+                        ? {
+                            ...player
+                        }
+                        : null
+            );
+
+
+        /*
+         * Make sure Start and End are the actual
+         * daily-game player objects.
+         */
+
+        if (
+            teammateStartPlayer &&
+            teammatePath.length
+        ) {
+
+            teammatePath[0] =
+                teammateStartPlayer;
+
+        }
+
+
+        if (
+            teammateEndPlayer &&
+            teammatePath.length > 1
+        ) {
+
+            teammatePath[
+                teammatePath.length - 1
+            ] =
+                teammateEndPlayer;
+
+        }
+
+
+        renderBoard();
+
+    }
+    else {
+
+        console.warn(
+            "No saved Teammate solution path is available."
+        );
+
+    }
+
+
+    /*
+     * Save the player's completed game.
+     */
+
     await saveTeammateProgress(
         false,
         true
     );
 
 
+    /*
+     * Popup remains the result popup.
+     * The solution itself is displayed on the board.
+     */
+
     showResult();
 
 }
 
+
+/* =========================================================
+   RESULT
+========================================================= */
 
 /* =========================================================
    RESULT
@@ -4811,6 +6094,30 @@ function showResult() {
         teammateScoreStats
     ) {
 
+        let solutionHTML =
+            "";
+
+
+        /*
+         * Only show the solution when the user
+         * gave up.
+         *
+         * The solution came from teammateGames,
+         * not from a new search.
+         */
+
+        if (
+            teammateOutcome === "giveup" &&
+            Array.isArray(
+                teammateSolutionPath
+            ) &&
+            teammateSolutionPath.length
+        ) {
+
+
+        }
+
+
         teammateScoreStats.innerHTML = `
 
             <div class="score-row">
@@ -4838,6 +6145,8 @@ function showResult() {
 
             </div>
 
+        
+
         `;
 
     }
@@ -4847,7 +6156,6 @@ function showResult() {
         "block";
 
 }
-
 
 /* =========================================================
    SHARE
