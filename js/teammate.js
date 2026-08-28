@@ -6224,36 +6224,24 @@ function showResult() {
 
 async function shareResults() {
 
-    const path =
-        teammatePath
-            .filter(
-                player =>
-                    player
-            )
-            .map(
-                player =>
-                    player.name
-            );
+    const correctConnections =
+        teammateGuesses.filter(
+            guess =>
+                guess.correct
+        ).length;
 
 
-    let text =
-        "Daily Diamond - Teammate Connection\n\n";
-
-
-    text +=
-        path.join(
-            " → "
-        );
-
-
-    text +=
-        `\n\nGuesses: ${teammateGuesses.length}`;
-
-
-    text +=
+    const result =
         teammateOutcome === "win"
-            ? "\nResult: 🟩"
-            : "\nResult: ⬛";
+            ? "🟩"
+            : "🟥";
+
+
+    const text =
+        `${teammateSelectedDate} - Teammate\n` +
+        `Connections: ${correctConnections}\n` +
+        `Guesses: ${teammateGuesses.length}\n` +
+        result;
 
 
     try {
@@ -6284,12 +6272,6 @@ async function shareResults() {
             await navigator.clipboard.writeText(
                 text
             );
-
-
-            /*showMessage(
-                "Results copied!",
-                false
-            );*/
 
 
             return;
@@ -6323,6 +6305,7 @@ async function shareResults() {
     }
 
 }
+
 
 
 /* =========================================================
