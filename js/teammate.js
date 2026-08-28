@@ -440,7 +440,13 @@ function restoreSavedTeammateGame(
     savedGame
 ) {
 
-    teammateSolutionPath = [];
+    /*
+     * Do NOT clear teammateSolutionPath here.
+     *
+     * loadTeammateDailyGame() already loaded the saved
+     * solutionPath from teammateGames.
+     */
+
 
     teammatePath = [
 
@@ -499,55 +505,69 @@ function restoreSavedTeammateGame(
 
 
     /*
-     * Rebuild the connection path.
+     * Determine whether this game was completed.
      */
 
-    for (
-        const guess of teammateGuesses
-    ) {
-
-        if (
-            !guess.correct ||
-            !guess.player ||
-            !guess.player.id
-        ) {
-
-            continue;
-
-        }
-
-
-        const blankIndex =
-            teammatePath.findIndex(
-                player =>
-                    player === null
-            );
-
-
-        if (
-            blankIndex < 0
-        ) {
-
-            break;
-
-        }
-
-
-        teammatePath.splice(
-            blankIndex,
-            1,
-            guess.player
+    const completed =
+        savedGame &&
+        (
+            savedGame.completed === true ||
+            savedGame.completed === "true"
         );
 
 
+    const won =
+        savedGame &&
+        (
+            savedGame.win === true ||
+            savedGame.win === "true"
+        );
+
+
+    /*
+     * =====================================================
+     * GIVE UP
+     * =====================================================
+     *
+     * If the player gave up, show the complete saved
+     * solution from teammateGames.solutionPath.
+     *
+     * This is NOT recalculated.
+     */
+
+    if (
+        completed &&
+        !won
+    ) {
+
         if (
-            guess.intermediate
+            Array.isArray(
+                teammateSolutionPath
+            ) &&
+            teammateSolutionPath.length
         ) {
 
-            teammatePath.splice(
-                blankIndex + 1,
-                0,
-                null
+            teammatePath =
+                teammateSolutionPath.map(
+                    player =>
+                        player
+                            ? {
+                                ...player
+                            }
+                            : null
+                );
+
+
+            console.log(
+                "Restored saved Teammate solution after Give Up:",
+                teammatePath
+            );
+
+        }
+        else {
+
+            console.warn(
+                "Game was given up, but no saved solution path is available."
             );
 
         }
@@ -555,30 +575,100 @@ function restoreSavedTeammateGame(
     }
 
 
+    /*
+     * =====================================================
+     * NORMAL GAME / WIN
+     * =====================================================
+     *
+     * For an unfinished game or a completed win, rebuild
+     * the board from the player's actual guesses.
+     */
+
+    else {
+
+        for (
+            const guess of teammateGuesses
+        ) {
+
+            if (
+                !guess.correct ||
+                !guess.player ||
+                !guess.player.id
+            ) {
+
+                continue;
+
+            }
+
+
+            const blankIndex =
+                teammatePath.findIndex(
+                    player =>
+                        player === null
+                );
+
+
+            if (
+                blankIndex < 0
+            ) {
+
+                break;
+
+            }
+
+
+            teammatePath.splice(
+                blankIndex,
+                1,
+                guess.player
+            );
+
+
+            if (
+                guess.intermediate
+            ) {
+
+                teammatePath.splice(
+                    blankIndex + 1,
+                    0,
+                    null
+                );
+
+            }
+
+        }
+
+    }
+
+
+    /*
+     * =====================================================
+     * GAME STATUS
+     * =====================================================
+     */
+
     if (
-        savedGame &&
-        (
-            savedGame.completed === true ||
-            savedGame.completed === "true"
-        )
+        completed
     ) {
 
-        teammateLocked = true;
+        teammateLocked =
+            true;
+
 
         teammateOutcome =
-            (
-                savedGame.win === true ||
-                savedGame.win === "true"
-            )
+            won
                 ? "win"
                 : "giveup";
 
     }
     else {
 
-        teammateLocked = false;
+        teammateLocked =
+            false;
 
-        teammateOutcome = null;
+
+        teammateOutcome =
+            null;
 
     }
 
@@ -586,6 +676,7 @@ function restoreSavedTeammateGame(
     updateGuessCount();
 
 }
+
 
 
 /* =========================================================
