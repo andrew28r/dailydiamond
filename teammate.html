@@ -261,47 +261,116 @@
 
 
     <!-- =================================================
-         RESULT CARD
-    ================================================== -->
+     RESULT CARD
+================================================== -->
 
-    <div
-        id="winPopup"
-        class="result-card"
+<div
+    id="winPopup"
+    class="result-card"
+>
+
+  
+<h3 id="winTitle">
+    You Win!
+</h3>
+
+
+<div
+    id="scoreStats"
+    class="score-stats"
+></div>
+
+
+<div class="result-buttons">
+
+    <button
+        id="shareResultsBtn"
+        type="button"
     >
+        Share
+    </button>
 
-        <h3 id="winTitle">
-            You Win!
-        </h3>
+</div>
+  
 
+</div>
+
+<!-- =================================================
+     RESULT VIEW TABS
+================================================== -->
+
+<div
+    id="resultViewTabs"
+    class="result-view-tabs"
+    style="display:none;"
+>
+
+  
+<button
+    id="viewGuessesBtn"
+    class="result-view-tab active"
+    type="button"
+>
+    <strong>Your Guesses</strong>
+</button>
+
+
+<button
+    id="viewSolutionsBtn"
+    class="result-view-tab"
+    type="button"
+>
+    Ideal Solution
+</button>
+  
+
+</div>
+
+        <!-- =================================================
+            SOLUTION NAVIGATION
+        ================================================== -->
 
         <div
-            id="scoreStats"
-            class="score-stats"
-        ></div>
+            id="solutionNavigation"
+            class="solution-navigation"
+            style="display:none;"
+        >
+
+          
+        <button
+            id="previousSolutionBtn"
+            type="button"
+            aria-label="Previous solution"
+        >
+            &lt;
+        </button>
 
 
-        <div class="result-buttons">
+        <span id="solutionNumber">
+            1
+        </span>
 
-            <button
-                id="shareResultsBtn"
-                type="button"
-            >
-                Share
-            </button>
+
+        <button
+            id="nextSolutionBtn"
+            type="button"
+            aria-label="Next solution"
+        >
+            &gt;
+        </button>
+          
 
         </div>
 
-    </div>
+        <!-- =================================================
+            CONNECTION BOARD
+        ================================================== -->
 
+        <div
+            id="board"
+            class="board teammate-board"
+        ></div>
 
-    <!-- =================================================
-         CONNECTION BOARD
-    ================================================== -->
-
-    <div
-        id="board"
-        class="board teammate-board"
-    ></div>
 
 
 </main>

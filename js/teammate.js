@@ -41,6 +41,8 @@ let teammatePath = [];
 
 let teammateSolutionPath = [];
 
+let teammateSelectedSolutionIndex = 0;
+
 let teammateGuesses = [];
 
 let teammatePlayers = [];
@@ -68,9 +70,16 @@ let teammateInitialized = false;
 let teammateCheckingGuess = false;
 
 
+
 /* =========================================================
    DOM
 ========================================================= */
+
+const teammateViewConnectionsBtn =
+    document.getElementById(
+        "viewConnectionsBtn"
+    );
+
 
 const teammateSearch =
     document.getElementById("search");
@@ -3835,6 +3844,7 @@ async function getAllTeammates(
  * is always the shortest solution.
  */
 
+
 async function findTeammateSolutionPath(
     startPlayerId,
     endPlayerId
@@ -3854,17 +3864,8 @@ async function findTeammateSolutionPath(
 
     if (
         !startId ||
-        !endId
-    ) {
-
-        return null;
-
-    }
-
-
-    if (
-        startId ===
-        endId
+        !endId ||
+        startId === endId
     ) {
 
         return null;
@@ -3873,20 +3874,24 @@ async function findTeammateSolutionPath(
 
 
     /*
-     * Make sure we have player objects for the
+     * Make sure we have player objects for
      * Start and End.
      */
 
     const startPlayer =
         teammateStartPlayer &&
-        Number(teammateStartPlayer.id) === startId
+        Number(
+            teammateStartPlayer.id
+        ) === startId
             ? teammateStartPlayer
             : await getPlayer(startId);
 
 
     const endPlayer =
         teammateEndPlayer &&
-        Number(teammateEndPlayer.id) === endId
+        Number(
+            teammateEndPlayer.id
+        ) === endId
             ? teammateEndPlayer
             : await getPlayer(endId);
 
@@ -3911,7 +3916,19 @@ async function findTeammateSolutionPath(
      * player.
      */
 
-    const queue = [];
+    let currentLevel = [
+
+        {
+            player:
+                startPlayer,
+
+            path: [
+                startPlayer
+            ]
+
+        }
+
+    ];
 
 
     const visited =
@@ -3924,200 +3941,111 @@ async function findTeammateSolutionPath(
 
 
     /*
-     * Start by finding ALL teammates of Start.
-     */
-
-    const startTeammates =
-        await getAllTeammates(
-            startId
-        );
-
-
-    console.log(
-        `Solution search: Start has ${startTeammates.length} teammates.`
-    );
-
-
-    /*
-     * DIRECT CONNECTION
+     * Connection level.
      *
-     * This normally cannot happen because your
-     * daily-game generator specifically prevents
-     * Start and End from being direct teammates.
-     *
-     * We still handle it safely.
+     * 1 = Start → End
+     * 2 = Start → Player → End
+     * 3 = Start → Player → Player → End
      */
 
-    for (
-        const teammate of startTeammates
-    ) {
+    let connectionLevel =
+        1;
 
-        if (
-            Number(teammate.id) ===
-            endId
-        ) {
-
-            console.log(
-                "Solution found with direct Start → End connection."
-            );
-
-
-            return [
-
-                startPlayer,
-
-                endPlayer
-
-            ];
-
-        }
-
-    }
-
-
-    /*
-     * Add Start's teammates as the first
-     * intermediate level.
-     */
-
-    for (
-        const teammate of startTeammates
-    ) {
-
-        const teammateId =
-            Number(
-                teammate.id
-            );
-
-
-        if (
-            visited.has(
-                teammateId
-            )
-        ) {
-
-            continue;
-
-        }
-
-
-        visited.add(
-            teammateId
-        );
-
-
-        queue.push({
-
-            player:
-                teammate,
-
-            path: [
-
-                startPlayer,
-
-                teammate
-
-            ]
-
-        });
-
-    }
-
-
-    /*
-     * Breadth-first search.
-     */
 
     while (
-        queue.length
+        currentLevel.length
     ) {
 
-        /*
-         * Grab the entire current level.
-         *
-         * Every item currently in the queue has
-         * the same path length.
-         */
-
-        const currentLevelSize =
-            queue.length;
-
-
-        const currentLevel =
-            queue.splice(
-                0,
-                currentLevelSize
-            );
-
-
         console.log(
-            `Searching solution level with ${currentLevel.length} nodes.`
+            `Searching solution level ${connectionLevel} with ${currentLevel.length} nodes.`
         );
 
 
         /*
-         * FIRST:
+         * -------------------------------------------------
+         * CHECK EVERY PLAYER AT THIS LEVEL
+         * -------------------------------------------------
          *
-         * Check every node at this level against End.
+         * We do NOT return immediately.
          *
-         * This guarantees we stop at the shortest
-         * possible solution.
+         * We collect EVERY connection at this level.
+         */
+
+        const solutions = [];
+
+
+        /*
+         * Check all current nodes against End.
+         *
+         * This is done in parallel so we don't
+         * stop at the first match.
+         */
+
+        const endChecks =
+            await Promise.all(
+
+                currentLevel.map(
+                    async node => {
+
+                        /*
+                         * Start itself is not checked
+                         * as a teammate of End.
+                         */
+
+                        if (
+                            Number(
+                                node.player.id
+                            ) === endId
+                        ) {
+
+                            return true;
+
+                        }
+
+
+                        return await werePlayersTeammates(
+                            node.player.id,
+                            endId
+                        );
+
+                    }
+                )
+
+            );
+
+
+        /*
+         * Collect EVERY solution at this
+         * shortest connection level.
          */
 
         for (
-            const node of currentLevel
+            let i = 0;
+            i < currentLevel.length;
+            i++
         ) {
 
             if (
-                Number(node.player.id) ===
-                endId
+                endChecks[i]
             ) {
 
-                return [
-
-                    ...node.path.slice(
-                        0,
-                        -1
-                    ),
-
-                    endPlayer
-
-                ];
-
-            }
+                const node =
+                    currentLevel[i];
 
 
-            const connectsToEnd =
-                await werePlayersTeammates(
-                    node.player.id,
-                    endId
+                const solution =
+                    [
+
+                        ...node.path,
+
+                        endPlayer
+
+                    ];
+
+
+                solutions.push(
+                    solution
                 );
-
-
-            if (
-                connectsToEnd
-            ) {
-
-                console.log(
-                    "Solution found:",
-                    node.path.map(
-                        player =>
-                            player.name
-                    ).join(
-                        " → "
-                    ),
-                    "→",
-                    endPlayer.name
-                );
-
-
-                return [
-
-                    ...node.path,
-
-                    endPlayer
-
-                ];
 
             }
 
@@ -4125,14 +4053,64 @@ async function findTeammateSolutionPath(
 
 
         /*
-         * No node at this level connects to End.
+         * If we found ANY solutions at this
+         * connection level, STOP.
          *
-         * Now expand all nodes to create the
-         * NEXT level.
+         * This means:
+         *
+         * 1 connection exists?
+         * → return ALL 1-connection paths.
+         *
+         * Otherwise:
+         *
+         * 2 connection exists?
+         * → return ALL 2-connection paths.
+         *
+         * etc.
+         */
+
+        if (
+            solutions.length
+        ) {
+
+            console.log(
+                `Found ${solutions.length} solution(s) at connection level ${connectionLevel}.`
+            );
+
+
+            for (
+                const solution of solutions
+            ) {
+
+                console.log(
+                    "Solution:",
+                    solution
+                        .map(
+                            player =>
+                                player.name
+                        )
+                        .join(
+                            " → "
+                        )
+                );
+
+            }
+
+
+            return solutions;
+
+        }
+
+
+        /*
+         * -------------------------------------------------
+         * EXPAND TO NEXT LEVEL
+         * -------------------------------------------------
          */
 
         const nextLevelResults =
             await Promise.all(
+
                 currentLevel.map(
                     async node => {
 
@@ -4152,7 +4130,20 @@ async function findTeammateSolutionPath(
 
                     }
                 )
+
             );
+
+
+        const nextLevel = [];
+
+
+        /*
+         * Track players added to the next
+         * level so we don't add duplicates.
+         */
+
+        const nextLevelSeen =
+            new Set();
 
 
         for (
@@ -4173,10 +4164,69 @@ async function findTeammateSolutionPath(
                     );
 
 
+                if (
+                    !teammateId ||
+                    teammateId === endId
+                ) {
+
+                    /*
+                     * End is checked at the beginning
+                     * of the next connection level.
+                     *
+                     * Don't need to expand End.
+                     */
+
+                    if (
+                        teammateId === endId
+                    ) {
+
+                        /*
+                         * Add End as a node so it can
+                         * be detected on the next level.
+                         */
+
+                        if (
+                            !visited.has(
+                                endId
+                            )
+                        ) {
+
+                            visited.add(
+                                endId
+                            );
+
+
+                            nextLevel.push({
+
+                                player:
+                                    endPlayer,
+
+                                path: [
+
+                                    ...node.path,
+
+                                    endPlayer
+
+                                ]
+
+                            });
+
+                        }
+
+                    }
+
+
+                    continue;
+
+                }
+
+
                 /*
-                 * Already visited means another
-                 * shorter/equal path already reached
-                 * this player.
+                 * Global visited set.
+                 *
+                 * A player already reached at a
+                 * shorter level does not need to be
+                 * searched again.
                  */
 
                 if (
@@ -4190,12 +4240,28 @@ async function findTeammateSolutionPath(
                 }
 
 
-                visited.add(
+                /*
+                 * Don't add the same player twice
+                 * to this next level.
+                 */
+
+                if (
+                    nextLevelSeen.has(
+                        teammateId
+                    )
+                ) {
+
+                    continue;
+
+                }
+
+
+                nextLevelSeen.add(
                     teammateId
                 );
 
 
-                queue.push({
+                nextLevel.push({
 
                     player:
                         teammate,
@@ -4215,16 +4281,42 @@ async function findTeammateSolutionPath(
         }
 
 
+        /*
+         * Mark the next level as visited only
+         * after the current level has been
+         * completely processed.
+         */
+
+        for (
+            const node of nextLevel
+        ) {
+
+            const id =
+                Number(
+                    node.player.id
+                );
+
+
+            visited.add(
+                id
+            );
+
+        }
+
+
+        currentLevel =
+            nextLevel;
+
+
+        connectionLevel++;
+
+
         console.log(
-            `Next solution level contains ${queue.length} nodes.`
+            `Next solution level contains ${currentLevel.length} nodes.`
         );
 
     }
 
-
-    /*
-     * No path exists.
-     */
 
     console.warn(
         `No teammate solution found from ${startId} to ${endId}.`
@@ -4236,6 +4328,7 @@ async function findTeammateSolutionPath(
 }
 
 
+
 /*
  * Convert a solution path into the compact JSON
  * we actually store in Supabase.
@@ -4244,11 +4337,11 @@ async function findTeammateSolutionPath(
  */
 
 function serializeTeammateSolutionPath(
-    path
+    paths
 ) {
 
     if (
-        !Array.isArray(path)
+        !Array.isArray(paths)
     ) {
 
         return [];
@@ -4256,30 +4349,55 @@ function serializeTeammateSolutionPath(
     }
 
 
-    return path
+    /*
+     * New format:
+     *
+     * [
+     *     [ Start, Player A, End ],
+     *     [ Start, Player B, End ]
+     * ]
+     *
+     * Keep only valid player objects.
+     */
+
+    return paths
         .filter(
-            player =>
-                player &&
-                player.id
+            path =>
+                Array.isArray(path) &&
+                path.length
         )
         .map(
-            player => ({
-
-                id:
-                    Number(
-                        player.id
-                    ),
-
-                name:
-                    String(
-                        player.name ||
-                        ""
+            path =>
+                path
+                    .filter(
+                        player =>
+                            player &&
+                            player.id
                     )
+                    .map(
+                        player => ({
 
-            })
+                            id:
+                                Number(
+                                    player.id
+                                ),
+
+                            name:
+                                String(
+                                    player.name ||
+                                    ""
+                                )
+
+                        })
+                    )
+        )
+        .filter(
+            path =>
+                path.length
         );
 
 }
+
 
 
 /*
@@ -4301,30 +4419,111 @@ function restoreTeammateSolutionPath(
     }
 
 
+    /*
+     * NEW FORMAT:
+     *
+     * [
+     *     [ Start, Player A, End ],
+     *     [ Start, Player B, End ]
+     * ]
+     *
+     *
+     * OLD FORMAT:
+     *
+     * [
+     *     Start,
+     *     Player A,
+     *     End
+     * ]
+     *
+     * Support BOTH so existing database games
+     * do not break.
+     */
+
+
+    /*
+     * Detect old single-path format.
+     */
+
+    if (
+        solutionPath.length &&
+        !Array.isArray(
+            solutionPath[0]
+        )
+    ) {
+
+        return [
+
+            solutionPath
+                .filter(
+                    player =>
+                        player &&
+                        player.id
+                )
+                .map(
+                    player => ({
+
+                        id:
+                            Number(
+                                player.id
+                            ),
+
+                        name:
+                            String(
+                                player.name ||
+                                ""
+                            )
+
+                    })
+                )
+
+        ];
+
+    }
+
+
+    /*
+     * New multiple-path format.
+     */
+
     return solutionPath
         .filter(
-            player =>
-                player &&
-                player.id
+            path =>
+                Array.isArray(path) &&
+                path.length
         )
         .map(
-            player => ({
-
-                id:
-                    Number(
-                        player.id
-                    ),
-
-                name:
-                    String(
-                        player.name ||
-                        ""
+            path =>
+                path
+                    .filter(
+                        player =>
+                            player &&
+                            player.id
                     )
+                    .map(
+                        player => ({
 
-            })
+                            id:
+                                Number(
+                                    player.id
+                                ),
+
+                            name:
+                                String(
+                                    player.name ||
+                                    ""
+                                )
+
+                        })
+                    )
+        )
+        .filter(
+            path =>
+                path.length
         );
 
 }
+
 
 
 /*
@@ -6005,205 +6204,169 @@ function updateGuessCount() {
 
 async function giveUp() {
 
-    if (
-        teammateLocked ||
-        teammateCheckingGuess
-    ) {
+if (
+    teammateLocked ||
+    teammateCheckingGuess
+) {
 
-        return;
+    return;
 
-    }
-
-
-    const confirmed =
-        window.confirm(
-            "Are you sure you want to give up?"
-        );
+}
 
 
-    if (!confirmed) {
-
-        return;
-
-    }
-
-
-    teammateLocked =
-        true;
-
-
-    teammateOutcome =
-        "giveup";
-
-
-    if (
-        teammateMenu
-    ) {
-
-        teammateMenu.classList.add(
-            "hidden"
-        );
-
-    }
-
-
-    if (
-        teammateSearch
-    ) {
-
-        teammateSearch.disabled =
-            true;
-
-    }
-
-
-    hideDropdown();
-
-
-    /*
-     * Save the player's current game first.
-     */
-
-    await saveTeammateProgress(
-        false,
-        true
+const confirmed =
+    window.confirm(
+        "Are you sure you want to give up?"
     );
 
 
-    /*
-     * =====================================================
-     * LOAD THE SAVED SOLUTION
-     * =====================================================
-     *
-     * The solution was already loaded from teammateGames
-     * during loadTeammateDailyGame().
-     *
-     * If it somehow isn't available in memory, reload the
-     * daily game from Supabase so we can get solutionPath.
-     */
+if (!confirmed) {
 
-    let solutionPath =
-        teammateSolutionPath;
+    return;
+
+}
 
 
-    if (
-        !Array.isArray(
-            solutionPath
-        ) ||
-        !solutionPath.length
-    ) {
+teammateLocked =
+    true;
 
-        console.log(
-            "Solution not currently in memory. Reloading daily game..."
+
+teammateOutcome =
+    "giveup";
+
+
+if (
+    teammateMenu
+) {
+
+    teammateMenu.classList.add(
+        "hidden"
+    );
+
+}
+
+
+if (
+    teammateSearch
+) {
+
+    teammateSearch.disabled =
+        true;
+
+}
+
+
+hideDropdown();
+
+
+/*
+ * Save the player's current game first.
+ */
+
+await saveTeammateProgress(
+    false,
+    true
+);
+
+
+/*
+ * Reset to the first ideal solution.
+ *
+ * teammateSolutionPath now contains:
+ *
+ * [
+ *     [ Start, Player A, End ],
+ *     [ Start, Player B, End ],
+ *     [ Start, Player C, End ]
+ * ]
+ */
+
+teammateSelectedSolutionIndex =
+    0;
+
+
+/*
+ * Show the first ideal solution on the board.
+ */
+
+if (
+    Array.isArray(
+        teammateSolutionPath
+    ) &&
+    teammateSolutionPath.length &&
+    Array.isArray(
+        teammateSolutionPath[0]
+    )
+) {
+
+    const firstSolution =
+        teammateSolutionPath[0];
+
+
+    teammatePath =
+        firstSolution.map(
+            player =>
+                player
+                    ? {
+                        ...player
+                    }
+                    : null
         );
 
 
-        const {
-            data,
-            error
-        } =
-            await db
-            .from("teammateGames")
-            .select("solutionPath")
-            .eq(
-                "date",
-                teammateSelectedDate
-            )
-            .maybeSingle();
+    console.log(
+        "Rendering first saved Teammate solution:",
+        teammatePath
+    );
 
 
-        if (
-            error
-        ) {
+    renderBoard();
 
-            console.error(
-                "Could not reload Teammate solution:",
-                error
-            );
+}
+else {
 
-        }
-        else if (
-            data &&
-            Array.isArray(
-                data.solutionPath
-            ) &&
-            data.solutionPath.length
-        ) {
+    console.warn(
+        "No Teammate solution paths available to render."
+    );
 
-            solutionPath =
-                restoreTeammateSolutionPath(
-                    data.solutionPath
-                );
+}
 
 
-            teammateSolutionPath =
-                solutionPath;
+/*
+ * Show the result card and activate
+ * the result-view controls.
+ */
+
+showResult();
 
 
-            console.log(
-                "Teammate solution reloaded from database:",
-                solutionPath
-            );
+/*
+ * showResult() defaults to Your Guesses.
+ *
+ * We want Give Up to immediately show
+ * the Ideal Solution instead.
+ */
 
-        }
-
-    }
-
-
-    /*
-     * =====================================================
-     * RENDER SOLUTION ON BOARD
-     * =====================================================
-     */
-
-    if (
-        Array.isArray(
-            solutionPath
-        ) &&
-        solutionPath.length
-    ) {
-
-        teammatePath =
-            solutionPath.map(
-                player =>
-                    player
-                        ? {
-                            ...player
-                        }
-                        : null
-            );
+const viewSolutionsBtn =
+    document.getElementById(
+        "viewSolutionsBtn"
+    );
 
 
-        console.log(
-            "Rendering Teammate solution on board:",
-            teammatePath
-        );
+if (
+    viewSolutionsBtn
+) {
 
+    viewSolutionsBtn.click();
 
-        renderBoard();
-
-    }
-    else {
-
-        console.warn(
-            "No Teammate solution path available to render."
-        );
-
-    }
-
-
-    /*
-     * Show the result popup.
-     *
-     * The solution itself is now displayed on the board.
-     */
-
-    showResult();
+}
 
 }
 
 
 
+
+
 /* =========================================================
    RESULT
 ========================================================= */
@@ -6211,6 +6374,7 @@ async function giveUp() {
 /* =========================================================
    RESULT
 ========================================================= */
+
 
 function showResult() {
 
@@ -6222,6 +6386,116 @@ function showResult() {
 
     }
 
+
+    /*
+     * -----------------------------------------------------
+     * ONLY SHOW RESULTS WHEN THE GAME IS ACTUALLY OVER
+     * -----------------------------------------------------
+     */
+
+    if (
+        !teammateLocked ||
+        (
+            teammateOutcome !== "win" &&
+            teammateOutcome !== "giveup"
+        )
+    ) {
+
+        const resultViewTabs =
+            document.getElementById(
+                "resultViewTabs"
+            );
+
+
+        const solutionNavigation =
+            document.getElementById(
+                "solutionNavigation"
+            );
+
+
+        if (
+            resultViewTabs
+        ) {
+
+            resultViewTabs.classList.add(
+                "hidden"
+            );
+
+        }
+
+
+        if (
+            solutionNavigation
+        ) {
+
+            solutionNavigation.style.display =
+                "none";
+
+        }
+
+
+        teammateWinPopup.style.display =
+            "none";
+
+
+        return;
+
+    }
+
+
+    /*
+     * -----------------------------------------------------
+     * RESULT ELEMENTS
+     * -----------------------------------------------------
+     */
+
+    const resultViewTabs =
+        document.getElementById(
+            "resultViewTabs"
+        );
+
+
+    const viewGuessesBtn =
+        document.getElementById(
+            "viewGuessesBtn"
+        );
+
+
+    const viewSolutionsBtn =
+        document.getElementById(
+            "viewSolutionsBtn"
+        );
+
+
+    const solutionNavigation =
+        document.getElementById(
+            "solutionNavigation"
+        );
+
+
+    const solutionNumber =
+        document.getElementById(
+            "solutionNumber"
+        );
+
+
+    const previousSolutionBtn =
+        document.getElementById(
+            "previousSolutionBtn"
+        );
+
+
+    const nextSolutionBtn =
+        document.getElementById(
+            "nextSolutionBtn"
+        );
+
+
+    /*
+     * -----------------------------------------------------
+     * TITLE
+     * -----------------------------------------------------
+     */
 
     if (
         teammateWinTitle
@@ -6235,6 +6509,14 @@ function showResult() {
     }
 
 
+    /*
+     * -----------------------------------------------------
+     * CONNECTION COUNT
+     * -----------------------------------------------------
+     *
+     * Count only correct guesses.
+     */
+
     const correctConnections =
         teammateGuesses.filter(
             guess =>
@@ -6242,33 +6524,15 @@ function showResult() {
         ).length;
 
 
+    /*
+     * -----------------------------------------------------
+     * SCORE
+     * -----------------------------------------------------
+     */
+
     if (
         teammateScoreStats
     ) {
-
-        let solutionHTML =
-            "";
-
-
-        /*
-         * Only show the solution when the user
-         * gave up.
-         *
-         * The solution came from teammateGames,
-         * not from a new search.
-         */
-
-        if (
-            teammateOutcome === "giveup" &&
-            Array.isArray(
-                teammateSolutionPath
-            ) &&
-            teammateSolutionPath.length
-        ) {
-
-
-        }
-
 
         teammateScoreStats.innerHTML = `
 
@@ -6297,17 +6561,657 @@ function showResult() {
 
             </div>
 
-        
-
         `;
 
     }
 
 
+    /*
+     * -----------------------------------------------------
+     * SHOW RESULT CARD
+     * -----------------------------------------------------
+     */
+
     teammateWinPopup.style.display =
         "block";
 
+
+    /*
+     * -----------------------------------------------------
+     * SHOW RESULT TABS
+     * -----------------------------------------------------
+     */
+
+    if (
+        resultViewTabs
+    ) {
+
+        resultViewTabs.classList.remove(
+            "hidden"
+        );
+
+
+        resultViewTabs.style.display =
+            "flex";
+
+    }
+
+
+    /*
+     * -----------------------------------------------------
+     * START ON "YOUR GUESSES"
+     * -----------------------------------------------------
+     */
+
+    if (
+        viewGuessesBtn
+    ) {
+
+        viewGuessesBtn.classList.add(
+            "active"
+        );
+
+    }
+
+
+    if (
+        viewSolutionsBtn
+    ) {
+
+        viewSolutionsBtn.classList.remove(
+            "active"
+        );
+
+    }
+
+    /*
+    * -----------------------------------------------------
+    * SOLUTION UI
+    * -----------------------------------------------------
+    *
+    * One solution:
+    *     "Ideal Solution"
+    *     No navigation
+    *
+    * Multiple solutions:
+    *     "Ideal Solutions"
+    *     Show navigation
+    */
+
+    const solutionCount =
+        Array.isArray(
+            teammateSolutionPath
+        )
+            ? teammateSolutionPath.length
+            : 0;
+
+
+    if (
+        viewSolutionsBtn
+    ) {
+
+        viewSolutionsBtn.textContent =
+            solutionCount === 1
+                ? "Ideal Solution"
+                : "Ideal Solutions";
+
+    }
+
+
+    /*
+    * Navigation is only needed when there
+    * is more than one solution.
+    */
+
+    if (
+        solutionNavigation
+    ) {
+
+        solutionNavigation.style.display =
+            "none";
+
+    }
+
+
+    if (
+        solutionNavigation
+    ) {
+
+        solutionNavigation.style.display =
+            "none";
+
+    }
+
+
+    teammateSelectedSolutionIndex =
+        0;
+
+
+    /*
+     * -----------------------------------------------------
+     * YOUR GUESSES
+     * -----------------------------------------------------
+     */
+
+    function showYourGuesses() {
+
+        if (
+            viewGuessesBtn
+        ) {
+
+            viewGuessesBtn.classList.add(
+                "active"
+            );
+
+        }
+
+
+        if (
+            viewSolutionsBtn
+        ) {
+
+            viewSolutionsBtn.classList.remove(
+                "active"
+            );
+
+        }
+
+
+        if (
+            solutionNavigation
+        ) {
+
+            solutionNavigation.style.display =
+                "none";
+
+        }
+
+
+        /*
+         * Rebuild the board using the player's
+         * actual guesses.
+         */
+
+        teammatePath =
+            buildTeammateGuessPath();
+
+
+        renderBoard();
+
+    }
+
+
+    /*
+     * -----------------------------------------------------
+     * IDEAL SOLUTION
+     * -----------------------------------------------------
+     */
+
+    function showSelectedSolution() {
+
+        if (
+            !Array.isArray(
+                teammateSolutionPath
+            ) ||
+            !teammateSolutionPath.length
+        ) {
+
+            console.warn(
+                "No Teammate solutions available."
+            );
+
+            return;
+
+        }
+
+
+        /*
+        * Number of available ideal solutions.
+        */
+
+        const solutionCount =
+            teammateSolutionPath.length;
+
+
+        /*
+        * -----------------------------------------------------
+        * UPDATE BUTTON TEXT
+        * -----------------------------------------------------
+        */
+
+        if (
+            viewSolutionsBtn
+        ) {
+
+            viewSolutionsBtn.textContent =
+                solutionCount === 1
+                    ? "Ideal Solution"
+                    : "Ideal Solutions";
+
+        }
+
+
+        /*
+        * -----------------------------------------------------
+        * GET SELECTED SOLUTION
+        * -----------------------------------------------------
+        */
+
+        if (
+            teammateSelectedSolutionIndex < 0
+        ) {
+
+            teammateSelectedSolutionIndex =
+                0;
+
+        }
+
+
+        if (
+            teammateSelectedSolutionIndex >=
+            solutionCount
+        ) {
+
+            teammateSelectedSolutionIndex =
+                solutionCount - 1;
+
+        }
+
+
+        const solution =
+            teammateSolutionPath[
+                teammateSelectedSolutionIndex
+            ];
+
+
+        if (
+            !Array.isArray(
+                solution
+            ) ||
+            !solution.length
+        ) {
+
+            return;
+
+        }
+
+
+        /*
+        * -----------------------------------------------------
+        * ACTIVE TAB
+        * -----------------------------------------------------
+        */
+
+        if (
+            viewSolutionsBtn
+        ) {
+
+            viewSolutionsBtn.classList.add(
+                "active"
+            );
+
+        }
+
+
+        if (
+            viewGuessesBtn
+        ) {
+
+            viewGuessesBtn.classList.remove(
+                "active"
+            );
+
+        }
+
+
+        /*
+        * -----------------------------------------------------
+        * SOLUTION NAVIGATION
+        * -----------------------------------------------------
+        *
+        * ONLY show navigation when there are
+        * multiple solutions.
+        */
+
+        if (
+            solutionNavigation
+        ) {
+
+            if (
+                solutionCount > 1
+            ) {
+
+                solutionNavigation.style.display =
+                    "flex";
+
+            }
+            else {
+
+                solutionNavigation.style.display =
+                    "none";
+
+            }
+
+        }
+
+
+        /*
+        * -----------------------------------------------------
+        * SOLUTION NUMBER
+        * -----------------------------------------------------
+        */
+
+        if (
+            solutionNumber
+        ) {
+
+            solutionNumber.textContent =
+                teammateSelectedSolutionIndex + 1;
+
+        }
+
+
+        /*
+        * -----------------------------------------------------
+        * PREVIOUS BUTTON
+        * -----------------------------------------------------
+        */
+
+        if (
+            previousSolutionBtn
+        ) {
+
+            previousSolutionBtn.disabled =
+                teammateSelectedSolutionIndex <= 0;
+
+        }
+
+
+        /*
+        * -----------------------------------------------------
+        * NEXT BUTTON
+        * -----------------------------------------------------
+    */
+
+        if (
+            nextSolutionBtn
+        ) {
+
+            nextSolutionBtn.disabled =
+                teammateSelectedSolutionIndex >=
+                solutionCount - 1;
+
+        }
+
+
+        /*
+        * -----------------------------------------------------
+        * DISPLAY SELECTED SOLUTION
+        * -----------------------------------------------------
+    */
+
+        teammatePath =
+            solution.map(
+                player =>
+                    player
+                        ? {
+                            ...player
+                        }
+                        : null
+            );
+
+
+        renderBoard();
+
+    }
+
+    /*
+     * -----------------------------------------------------
+     * YOUR GUESSES BUTTON
+     * -----------------------------------------------------
+     */
+
+    if (
+        viewGuessesBtn &&
+        !viewGuessesBtn.dataset.bound
+    ) {
+
+        viewGuessesBtn.dataset.bound =
+            "true";
+
+
+        viewGuessesBtn.addEventListener(
+            "click",
+            () => {
+
+                showYourGuesses();
+
+            }
+        );
+
+    }
+
+
+    /*
+     * -----------------------------------------------------
+     * IDEAL SOLUTION BUTTON
+     * -----------------------------------------------------
+     */
+
+    if (
+        viewSolutionsBtn &&
+        !viewSolutionsBtn.dataset.bound
+    ) {
+
+        viewSolutionsBtn.dataset.bound =
+            "true";
+
+
+        viewSolutionsBtn.addEventListener(
+            "click",
+            () => {
+
+                teammateSelectedSolutionIndex =
+                    0;
+
+
+                showSelectedSolution();
+
+            }
+        );
+
+    }
+
+
+    /*
+     * -----------------------------------------------------
+     * PREVIOUS SOLUTION
+     * -----------------------------------------------------
+ */
+
+    if (
+        previousSolutionBtn &&
+        !previousSolutionBtn.dataset.bound
+    ) {
+
+        previousSolutionBtn.dataset.bound =
+            "true";
+
+
+        previousSolutionBtn.addEventListener(
+            "click",
+            () => {
+
+                if (
+                    teammateSelectedSolutionIndex <= 0
+                ) {
+
+                    return;
+
+                }
+
+
+                teammateSelectedSolutionIndex--;
+
+
+                showSelectedSolution();
+
+            }
+        );
+
+    }
+
+
+    /*
+     * -----------------------------------------------------
+     * NEXT SOLUTION
+     * -----------------------------------------------------
+ */
+
+    if (
+        nextSolutionBtn &&
+        !nextSolutionBtn.dataset.bound
+    ) {
+
+        nextSolutionBtn.dataset.bound =
+            "true";
+
+
+        nextSolutionBtn.addEventListener(
+            "click",
+            () => {
+
+                if (
+                    !Array.isArray(
+                        teammateSolutionPath
+                    )
+                ) {
+
+                    return;
+
+                }
+
+
+                if (
+                    teammateSelectedSolutionIndex >=
+                    teammateSolutionPath.length - 1
+                ) {
+
+                    return;
+
+                }
+
+
+                teammateSelectedSolutionIndex++;
+
+
+                showSelectedSolution();
+
+            }
+        );
+
+    }
+
+
+    /*
+     * -----------------------------------------------------
+     * DEFAULT VIEW
+     * -----------------------------------------------------
+     *
+     * Always show the player's guesses first.
+     */
+
+    showYourGuesses();
+
 }
+
+
+
+
+/* =========================================================
+BUILD PLAYER GUESS PATH
+========================================================= */
+
+function buildTeammateGuessPath() {
+
+
+const path = [
+
+    teammateStartPlayer,
+
+    null,
+
+    teammateEndPlayer
+
+];
+
+
+for (
+    const guess of teammateGuesses
+) {
+
+    if (
+        !guess ||
+        !guess.correct ||
+        !guess.player ||
+        !guess.player.id
+    ) {
+
+        continue;
+
+    }
+
+
+    const blankIndex =
+        path.findIndex(
+            player =>
+                player === null
+        );
+
+
+    if (
+        blankIndex < 0
+    ) {
+
+        break;
+
+    }
+
+
+    path.splice(
+        blankIndex,
+        1,
+        {
+            ...guess.player
+        }
+    );
+
+
+    /*
+     * Intermediate guesses create another
+     * blank connection.
+     */
+
+    if (
+        guess.intermediate
+    ) {
+
+        path.splice(
+            blankIndex + 1,
+            0,
+            null
+        );
+
+    }
+
+}
+
+
+return path;
+
+
+}
+
 
 /* =========================================================
    SHARE
