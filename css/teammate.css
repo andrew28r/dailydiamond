@@ -459,3 +459,68 @@
     font-weight: 800;
 
 }
+
+
+/* =========================================================
+   TEAMMATE PLAYER HISTORY OVERLAY
+========================================================= */
+
+.teammate-row {
+    position: relative;
+    overflow: hidden;
+}
+
+
+.teammate-history-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 10;
+
+    display: flex;
+    align-items: center;
+
+    padding: 4px 14px;
+
+    background: #252525;
+    color: #ffffff;
+
+    font-size: 11px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    box-sizing: border-box;
+
+    overflow: hidden;
+}
+
+.teammate-history-overlay .teammate-history-content {
+    width: 100%;
+
+    display: block;
+
+    text-align: left;
+
+    line-height: 1.25;
+
+    white-space: normal;
+
+    overflow: hidden;
+}
+
+.teammate-history-content {
+    width: 100%;
+
+    text-align: left;
+
+    line-height: 1.25;
+
+    white-space: normal;
+
+    overflow: hidden;
+}
+
+.teammate-history-team {
+    display: inline-block;
+    margin-right: 18px;
+}

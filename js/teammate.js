@@ -69,6 +69,8 @@ let teammateInitialized = false;
 
 let teammateCheckingGuess = false;
 
+let teammateExpandedPlayerId = null;
+
 
 
 /* =========================================================
@@ -5574,7 +5576,6 @@ function getCurrentConnectionPlayer() {
 /* =========================================================
    RENDER BOARD
 ========================================================= */
-
 function renderBoard() {
 
     if (!teammateBoard) {
@@ -5595,6 +5596,10 @@ function renderBoard() {
         const player =
             teammatePath[i];
 
+
+        /*
+         * Blank "Guess Teammate" row.
+         */
 
         if (!player) {
 
@@ -5637,6 +5642,10 @@ function renderBoard() {
         }
 
 
+        /*
+         * Determine row type.
+         */
+
         let rowClass =
             "guess-player";
 
@@ -5647,12 +5656,13 @@ function renderBoard() {
 
         if (
             teammateStartPlayer &&
-            player.id ===
-            teammateStartPlayer.id
+            Number(player.id) ===
+            Number(teammateStartPlayer.id)
         ) {
 
             rowClass =
                 "start-player";
+
 
             label =
                 "Start";
@@ -5660,18 +5670,23 @@ function renderBoard() {
         }
         else if (
             teammateEndPlayer &&
-            player.id ===
-            teammateEndPlayer.id
+            Number(player.id) ===
+            Number(teammateEndPlayer.id)
         ) {
 
             rowClass =
                 "end-player";
+
 
             label =
                 "End";
 
         }
 
+
+        /*
+         * Create player row.
+         */
 
         const row =
             document.createElement(
@@ -5683,6 +5698,45 @@ function renderBoard() {
             `teammate-row ${rowClass}`;
 
 
+        row.style.cursor =
+            "pointer";
+
+
+        /*
+         * ONE click handler only.
+         *
+         * Clicking the player row opens/closes
+         * the dark history overlay.
+         */
+
+        row.addEventListener(
+            "click",
+            event => {
+
+                if (
+                    event.target.closest(
+                        ".teammate-history-overlay"
+                    )
+                ) {
+
+                    return;
+
+                }
+
+
+                toggleTeammatePlayerHistory(
+                    row,
+                    player
+                );
+
+            }
+        );
+
+
+        /*
+         * Player wrapper.
+         */
+
         const playerWrapper =
             document.createElement(
                 "div"
@@ -5692,6 +5746,10 @@ function renderBoard() {
         playerWrapper.className =
             "teammate-player";
 
+
+        /*
+         * Headshot.
+         */
 
         const headshot =
             document.createElement(
@@ -5725,6 +5783,10 @@ function renderBoard() {
 
             };
 
+
+        /*
+         * Player info.
+         */
 
         const info =
             document.createElement(
@@ -5770,6 +5832,10 @@ function renderBoard() {
         );
 
 
+        /*
+         * Start / End label.
+         */
+
         if (label) {
 
             const labelElement =
@@ -5793,10 +5859,18 @@ function renderBoard() {
         }
 
 
+        /*
+         * Add row to board.
+         */
+
         teammateBoard.appendChild(
             row
         );
 
+
+        /*
+         * Arrow.
+         */
 
         if (
             i <
@@ -5811,6 +5885,825 @@ function renderBoard() {
 
 }
 
+
+async function getPlayerTeamHistory(
+    playerId
+) {
+
+    if (!playerId) {
+
+        return [];
+
+    }
+
+
+    try {
+
+        /*
+         * This is the same player/team history
+         * already used by the teammate pathfinder.
+         *
+         * Expected format:
+         *
+         * [
+         *     {
+         *         teamId: 147,
+         *         year: 2009
+         *     },
+         *     ...
+         * ]
+         */
+
+        const teams =
+            await getPlayerTeams(
+                playerId
+            );
+
+
+        if (
+            !Array.isArray(teams) ||
+            !teams.length
+        ) {
+
+            return [];
+
+        }
+
+
+        /*
+         * Group consecutive seasons by team.
+         */
+
+        const grouped =
+            new Map();
+
+
+        for (
+            const entry of teams
+        ) {
+
+            if (
+                !entry ||
+                !entry.teamId ||
+                !entry.year
+            ) {
+
+                continue;
+
+            }
+
+
+            const teamId =
+                Number(
+                    entry.teamId
+                );
+
+
+            const year =
+                Number(
+                    entry.year
+                );
+
+
+            if (
+                !teamId ||
+                !year
+            ) {
+
+                continue;
+
+            }
+
+
+            if (
+                !grouped.has(
+                    teamId
+                )
+            ) {
+
+                grouped.set(
+                    teamId,
+                    {
+                        teamId,
+                        years: []
+                    }
+                );
+
+            }
+
+
+            const team =
+                grouped.get(
+                    teamId
+                );
+
+
+            if (
+                !team.years.includes(
+                    year
+                )
+            ) {
+
+                team.years.push(
+                    year
+                );
+
+            }
+
+        }
+
+
+        /*
+         * Get team names.
+         */
+
+        const history =
+            await Promise.all(
+
+                Array.from(
+                    grouped.values()
+                ).map(
+                    async team => {
+
+                        let teamName =
+                            "";
+
+
+                        try {
+
+                            const response =
+                                await fetch(
+                                    `${TEAMMATE_API}/teams/${team.teamId}`
+                                );
+
+
+                            if (
+                                response.ok
+                            ) {
+
+                                const data =
+                                    await response.json();
+
+
+                                const teamData =
+                                    data.teams &&
+                                    data.teams[0];
+
+
+                                if (
+                                    teamData
+                                ) {
+
+                                    teamName =
+                                        teamData.name ||
+                                        teamData.teamName ||
+                                        "";
+
+                                }
+
+                            }
+
+                        }
+                        catch (error) {
+
+                            console.warn(
+                                `Could not load team ${team.teamId}:`,
+                                error
+                            );
+
+                        }
+
+
+                        team.years.sort(
+                            (a, b) =>
+                                a - b
+                        );
+
+
+                        return {
+
+                            teamId:
+                                team.teamId,
+
+                            teamName:
+                                teamName ||
+                                `Team ${team.teamId}`,
+
+                            years:
+                                formatTeammateYears(
+                                    team.years
+                                ),
+
+                            firstYear:
+                                team.years[0] ||
+                                9999
+
+                        };
+
+                    }
+                )
+
+            );
+
+
+        /*
+         * Sort teams chronologically.
+         */
+
+        history.sort(
+            (a, b) =>
+                a.firstYear -
+                b.firstYear
+        );
+
+
+        return history;
+
+    }
+    catch (error) {
+
+        console.error(
+            "Could not get player team history:",
+            error
+        );
+
+
+        return [];
+
+    }
+
+}
+
+function formatTeammateYears(
+    years
+) {
+
+    if (!years.length) {
+        return "";
+    }
+
+
+    const ranges = [];
+
+    let start =
+        years[0];
+
+    let previous =
+        years[0];
+
+
+    for (
+        let i = 1;
+        i < years.length;
+        i++
+    ) {
+
+        const current =
+            years[i];
+
+
+        if (
+            current ===
+            previous + 1
+        ) {
+
+            previous =
+                current;
+
+            continue;
+
+        }
+
+
+        ranges.push(
+            formatTeammateYearRange(
+                start,
+                previous
+            )
+        );
+
+
+        start =
+            current;
+
+        previous =
+            current;
+
+    }
+
+
+    ranges.push(
+        formatTeammateYearRange(
+            start,
+            previous
+        )
+    );
+
+
+    return ranges.join(
+        ", "
+    );
+
+}
+
+
+function formatTeammateYearRange(
+    start,
+    end
+) {
+
+    if (
+        start === end
+    ) {
+
+        return String(
+            start
+        );
+
+    }
+
+
+    return (
+        `${start}–${String(end).slice(-2)}`
+    );
+
+}
+
+
+function getFirstYear(
+    formattedYears
+) {
+
+    if (!formattedYears) {
+        return 9999;
+    }
+
+    const match =
+        formattedYears.match(
+            /\d{4}/
+        );
+
+    return match
+        ? Number(match[0])
+        : 9999;
+
+}
+/* =========================================================
+   PLAYER TEAM HISTORY
+========================================================= */
+function toggleTeammatePlayerHistory(
+    row,
+    player
+) {
+
+    if (
+        !row ||
+        !player ||
+        !player.id
+    ) {
+
+        return;
+
+    }
+
+
+    /*
+     * If this row already has an overlay,
+     * remove it.
+     */
+
+    const existingOverlay =
+        row.querySelector(
+            ".teammate-history-overlay"
+        );
+
+
+    if (
+        existingOverlay
+    ) {
+
+        existingOverlay.remove();
+
+        return;
+
+    }
+
+
+    /*
+     * Remove any history overlay from
+     * another row first.
+     */
+
+    document
+        .querySelectorAll(
+            ".teammate-history-overlay"
+        )
+        .forEach(
+            overlay => {
+
+                overlay.remove();
+
+            }
+        );
+
+
+    /*
+     * Create the overlay.
+     */
+
+    const overlay =
+        document.createElement(
+            "div"
+        );
+
+
+    overlay.className =
+        "teammate-history-overlay";
+
+
+    const content =
+        document.createElement(
+            "div"
+        );
+
+
+    content.className =
+        "teammate-history-content";
+
+
+    content.textContent =
+        "Loading...";
+
+
+    overlay.appendChild(
+        content
+    );
+
+
+    /*
+     * Put the overlay directly inside
+     * the row.
+     */
+
+    row.appendChild(
+        overlay
+    );
+
+
+    /*
+     * Clicking the overlay closes it.
+     */
+
+    overlay.addEventListener(
+        "click",
+        event => {
+
+            event.stopPropagation();
+
+            overlay.remove();
+
+        }
+    );
+
+
+    /*
+     * Load the player's team history.
+     */
+
+    getPlayerTeamHistory(
+        player.id
+    )
+    .then(
+        history => {
+
+            if (
+                !overlay.isConnected
+            ) {
+
+                return;
+
+            }
+
+
+            if (
+                !Array.isArray(history) ||
+                !history.length
+            ) {
+
+                content.innerHTML =
+                    `<span class="teammate-history-empty">
+                        No team history available
+                    </span>`;
+
+                return;
+
+            }
+
+
+            content.innerHTML =
+        history
+            .map(
+                team =>
+                    `<span class="teammate-history-team">${team.teamName} ${team.years}</span>`
+            )
+            .join("");
+
+        }
+    )
+    .catch(
+        error => {
+
+            console.error(
+                "Could not load player team history:",
+                error
+            );
+
+
+            if (
+                overlay.isConnected
+            ) {
+
+                content.innerHTML =
+                    `<span class="teammate-history-empty">
+                        Team history unavailable
+                    </span>`;
+
+            }
+
+        }
+    );
+
+}
+
+async function loadAndRenderTeammateHistory(
+    player,
+    container
+) {
+
+    if (
+        !player ||
+        !player.id ||
+        !container
+    ) {
+
+        return;
+
+    }
+
+
+    try {
+
+        const teams =
+            await getPlayerTeams(
+                player.id
+            );
+
+
+        /*
+         * The player may have been collapsed
+         * while the request was loading.
+         */
+
+        if (
+            teammateExpandedPlayerId !==
+            Number(player.id)
+        ) {
+
+            return;
+
+        }
+
+
+        if (
+            !teams.length
+        ) {
+
+            container.textContent =
+                "No team history available.";
+
+            return;
+
+        }
+
+
+        const grouped =
+            new Map();
+
+
+        /*
+         * Group consecutive seasons for
+         * the same team.
+         */
+
+        const sorted =
+            [...teams]
+                .sort(
+                    (
+                        a,
+                        b
+                    ) =>
+                        a.year -
+                        b.year
+                );
+
+
+        for (
+            const item of sorted
+        ) {
+
+            if (
+                !item.teamId ||
+                !item.year
+            ) {
+
+                continue;
+
+            }
+
+
+            if (
+                !grouped.has(
+                    item.teamId
+                )
+            ) {
+
+                grouped.set(
+                    item.teamId,
+                    []
+                );
+
+            }
+
+
+            grouped
+                .get(
+                    item.teamId
+                )
+                .push(
+                    item.year
+                );
+
+        }
+
+
+        const historyRows =
+            [];
+
+
+        for (
+            const [
+                teamId,
+                years
+            ]
+            of grouped
+        ) {
+
+            if (
+                !years.length
+            ) {
+
+                continue;
+
+            }
+
+
+            /*
+             * Get the team name.
+             */
+
+            let teamName =
+                `Team ${teamId}`;
+
+
+            try {
+
+                const response =
+                    await fetch(
+                        `${TEAMMATE_API}/teams/${teamId}`
+                    );
+
+
+                if (
+                    response.ok
+                ) {
+
+                    const data =
+                        await response.json();
+
+
+                    if (
+                        data.teams &&
+                        data.teams.length
+                    ) {
+
+                        teamName =
+                            data.teams[0].name ||
+                            data.teams[0].teamName ||
+                            teamName;
+
+                    }
+
+                }
+
+            }
+            catch (error) {
+
+                console.warn(
+                    `Unable to load team ${teamId}:`,
+                    error
+                );
+
+            }
+
+
+            const firstYear =
+                years[0];
+
+
+            const lastYear =
+                years[
+                    years.length - 1
+                ];
+
+
+            let yearText;
+
+
+            if (
+                firstYear ===
+                lastYear
+            ) {
+
+                yearText =
+                    String(
+                        firstYear
+                    );
+
+            }
+            else {
+
+                yearText =
+                    `${firstYear}–${String(lastYear).slice(-2)}`;
+
+            }
+
+
+            historyRows.push({
+
+                firstYear,
+
+                html:
+                    `<div class="teammate-history-row">` +
+                    `<span class="teammate-history-team">${teamName}</span>` +
+                    `<span class="teammate-history-years">${yearText}</span>` +
+                    `</div>`
+
+            });
+
+        }
+
+
+        historyRows.sort(
+            (
+                a,
+                b
+            ) =>
+                a.firstYear -
+                b.firstYear
+        );
+
+
+        container.innerHTML =
+            historyRows
+                .map(
+                    row =>
+                        row.html
+                )
+                .join("");
+
+
+    }
+    catch (error) {
+
+        console.error(
+            "Failed to load teammate history:",
+            error
+        );
+
+
+        if (
+            teammateExpandedPlayerId ===
+            Number(player.id)
+        ) {
+
+            container.textContent =
+                "Unable to load team history.";
+
+        }
+
+    }
+
+}
 
 /* =========================================================
    ARROW
@@ -5839,6 +6732,142 @@ function appendArrow() {
 }
 
 
+
+function formatTeammateTeamHistory(
+    teams
+) {
+
+    if (
+        !Array.isArray(teams) ||
+        !teams.length
+    ) {
+
+        return "";
+
+    }
+
+
+    const sorted =
+        [...teams]
+            .filter(
+                team =>
+                    team &&
+                    team.teamId &&
+                    team.year
+            )
+            .sort(
+                (a, b) =>
+                    Number(a.year) -
+                    Number(b.year)
+            );
+
+
+    const groups = [];
+
+
+    for (
+        const team of sorted
+    ) {
+
+        const teamId =
+            Number(
+                team.teamId
+            );
+
+
+        const year =
+            Number(
+                team.year
+            );
+
+
+        const teamName =
+            team.teamName ||
+            team.name ||
+            "";
+
+
+        if (
+            !teamId ||
+            !year ||
+            !teamName
+        ) {
+
+            continue;
+
+        }
+
+
+        const previous =
+            groups[
+                groups.length - 1
+            ];
+
+
+        /*
+         * Same team in consecutive years.
+         */
+
+        if (
+            previous &&
+            previous.teamId === teamId &&
+            year ===
+                previous.endYear + 1
+        ) {
+
+            previous.endYear =
+                year;
+
+        }
+        else {
+
+            groups.push({
+
+                teamId,
+
+                teamName,
+
+                startYear:
+                    year,
+
+                endYear:
+                    year
+
+            });
+
+        }
+
+    }
+
+
+    return groups
+        .map(
+            group => {
+
+                const years =
+                    group.startYear ===
+                    group.endYear
+
+                        ? String(
+                            group.startYear
+                        )
+
+                        : `${group.startYear}–${String(
+                            group.endYear
+                        ).slice(-2)}`;
+
+
+                return (
+                    `${group.teamName} ${years}`
+                );
+
+            }
+        )
+        .join(
+            " • "
+        );
+
+}
 /* =========================================================
    HEADSHOT
 ========================================================= */
