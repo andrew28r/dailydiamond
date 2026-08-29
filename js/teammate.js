@@ -6346,7 +6346,7 @@ showResult();
  * We want Give Up to immediately show
  * the Ideal Solution instead.
  */
-
+/*
 const viewSolutionsBtn =
     document.getElementById(
         "viewSolutionsBtn"
@@ -6360,9 +6360,9 @@ if (
     viewSolutionsBtn.click();
 
 }
+*/
 
 }
-
 
 
 
