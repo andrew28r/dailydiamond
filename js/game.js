@@ -512,8 +512,8 @@ function renderDropdown() {
     img.className = "dropdown-headshot";
 
     img.onerror = () => {
-      img.src =
-        "https://img.mlbstatic.com/mlb-photos/image/upload/v1/people/default/headshot/0/current";
+      img.onerror = null; // Prevent an infinite loop if the generic image also fails
+      img.src = getGenericHeadshot();
     };
 
     const span = document.createElement("span");
@@ -532,6 +532,24 @@ function renderDropdown() {
   });
 
   dropdown.style.display = "block";
+}
+
+
+
+
+/* =========================================================
+   GENERIC HEADSHOT
+========================================================= */
+
+function getGenericHeadshot() {
+
+    return (
+        "https://img.mlbstatic.com/mlb-photos/image/upload/" +
+        "d_people:generic:headshot:67:current.png/" +
+        "w_213,q_auto:best/" +
+        "v1/people/0/headshot/67/current"
+    );
+
 }
 
 /* =========================
