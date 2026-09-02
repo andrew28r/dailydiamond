@@ -975,6 +975,10 @@ async function saveTeammatePlayerGame(
    UPDATE TEAMMATE PLAYER DATA
 ========================================================= */
 
+/* =========================================================
+   UPDATE TEAMMATE PLAYER DATA
+========================================================= */
+
 async function updateTeammatePlayerData(
     playerId
 ) {
@@ -987,6 +991,10 @@ async function updateTeammatePlayerData(
     const playerIdString =
         String(playerId);
 
+
+    /* -----------------------------------------------------
+       LOAD ALL PLAYER GAMES
+    ----------------------------------------------------- */
 
     const {
         data: games,
@@ -1028,7 +1036,11 @@ async function updateTeammatePlayerData(
     ----------------------------------------------------- */
 
     const gamesPlayed =
-        allGames.length;
+        allGames.filter(
+            game =>
+                game.completed === true ||
+                game.completed === "true"
+        ).length;
 
 
     /* -----------------------------------------------------
@@ -1038,132 +1050,243 @@ async function updateTeammatePlayerData(
     const wins =
         allGames.filter(
             game =>
-                game.win === true ||
-                game.win === "true"
+                (
+                    game.completed === true ||
+                    game.completed === "true"
+                ) &&
+                (
+                    game.win === true ||
+                    game.win === "true"
+                )
         ).length;
 
 
     /* -----------------------------------------------------
        STREAK
+       
+       Rules:
+       
+       1. Today's game has not been played yet:
+          Keep the streak based on previous completed
+          games. Do NOT reset it just because today
+          doesn't have a record yet.
+
+       2. Today's game was completed:
+          - Win = continue/start streak
+          - Loss = streak is 0
+
+       3. Previous days must have been completed on
+          their actual game date.
+
+       4. A missed day breaks the streak.
+
+       5. Old games completed late do not count toward
+          the current streak.
     ----------------------------------------------------- */
 
     let streak = 0;
 
 
-    let expectedDate =
+    const today =
         getEasternDateString();
 
 
-    for (
-        let i = 0;
-        i < 100;
-        i++
-    ) {
+    /*
+     * Find today's game, if one exists.
+     */
 
-        const dayGame =
-            allGames.find(
-                game =>
-                    game.date ===
-                    expectedDate
-            );
-
-
-        if (!dayGame) {
-            break;
-        }
-
-
-        const completed =
-            dayGame.completed === true ||
-            dayGame.completed === "true";
-
-
-        const win =
-            dayGame.win === true ||
-            dayGame.win === "true";
-
-
-        const completedSameDay =
-            dayGame.completedsameday === true ||
-            dayGame.completedsameday === "true";
-
-
-        if (!completed) {
-            break;
-        }
-
-
-        /*
-         * Today's game is allowed automatically.
-         *
-         * Previous games must have been completed
-         * on their actual game date.
-         */
-
-        if (
-            expectedDate !==
-                getEasternDateString() &&
-            !completedSameDay
-        ) {
-
-            break;
-        }
-
-
-        /*
-         * A loss breaks the streak.
-         */
-
-        if (!win) {
-            break;
-        }
-
-
-        streak++;
-
-
-        /*
-         * Move to previous day.
-         */
-
-        const [
-            year,
-            month,
-            day
-        ] =
-            expectedDate
-                .split("-")
-                .map(Number);
-
-
-        const previousDate =
-            new Date(
-                Date.UTC(
-                    year,
-                    month - 1,
-                    day
-                )
-            );
-
-
-        previousDate.setUTCDate(
-            previousDate.getUTCDate() - 1
+    const todayGame =
+        allGames.find(
+            game =>
+                game.date === today
         );
 
 
+    /*
+     * If today's game exists and is completed,
+     * it determines whether the current streak starts
+     * with today.
+     */
+
+    let expectedDate = today;
+
+
+    if (
+        todayGame &&
+        (
+            todayGame.completed === true ||
+            todayGame.completed === "true"
+        )
+    ) {
+
+        const todayWin =
+            todayGame.win === true ||
+            todayGame.win === "true";
+
+
+        const todayCompletedSameDay =
+            todayGame.completedsameday === true ||
+            todayGame.completedsameday === "true";
+
+
+        /*
+         * A completed game played today only counts if
+         * it was actually completed today.
+         *
+         * For today's record this should normally be true.
+         */
+
+        if (
+            !todayCompletedSameDay
+        ) {
+
+            /*
+             * Today's puzzle was completed, but not
+             * on its actual date. It cannot start the
+             * current streak.
+             */
+
+            expectedDate = null;
+
+        }
+        else if (!todayWin) {
+
+            /*
+             * Today's game was completed but lost/given up.
+             * Current streak is immediately broken.
+             */
+
+            streak = 0;
+            expectedDate = null;
+
+        }
+        else {
+
+            /*
+             * Today's game was won.
+             */
+
+            streak = 1;
+
+
+            /*
+             * Continue checking previous calendar days.
+             */
+
+            expectedDate =
+                getPreviousEasternDate(
+                    today
+                );
+        }
+
+    }
+    else {
+
+        /*
+         * TODAY HAS NOT BEEN COMPLETED.
+         *
+         * This is important:
+         * Do NOT reset the player's existing streak.
+         *
+         * Start checking from yesterday.
+         */
+
         expectedDate =
-            [
-                previousDate.getUTCFullYear(),
+            getPreviousEasternDate(
+                today
+            );
+    }
 
-                String(
-                    previousDate.getUTCMonth() + 1
-                ).padStart(2, "0"),
 
-                String(
-                    previousDate.getUTCDate()
-                ).padStart(2, "0")
+    /* -----------------------------------------------------
+       WALK BACK THROUGH CONSECUTIVE DAYS
+    ----------------------------------------------------- */
 
-            ].join("-");
+    if (expectedDate !== null) {
+
+        for (
+            let i = 0;
+            i < 100;
+            i++
+        ) {
+
+            const dayGame =
+                allGames.find(
+                    game =>
+                        game.date ===
+                        expectedDate
+                );
+
+
+            /*
+             * No game for this date means the player
+             * missed that day, so the streak ends.
+             */
+
+            if (!dayGame) {
+                break;
+            }
+
+
+            const completed =
+                dayGame.completed === true ||
+                dayGame.completed === "true";
+
+
+            const win =
+                dayGame.win === true ||
+                dayGame.win === "true";
+
+
+            const completedSameDay =
+                dayGame.completedsameday === true ||
+                dayGame.completedsameday === "true";
+
+
+            /*
+             * Game must have been completed.
+             */
+
+            if (!completed) {
+                break;
+            }
+
+
+            /*
+             * Previous-day games must have actually
+             * been completed on their game date.
+             */
+
+            if (!completedSameDay) {
+                break;
+            }
+
+
+            /*
+             * A loss/give-up breaks the streak.
+             */
+
+            if (!win) {
+                break;
+            }
+
+
+            /*
+             * Successful consecutive day.
+             */
+
+            streak++;
+
+
+            /*
+             * Move to the previous calendar day.
+             */
+
+            expectedDate =
+                getPreviousEasternDate(
+                    expectedDate
+                );
+        }
     }
 
 
@@ -1226,6 +1349,54 @@ async function updateTeammatePlayerData(
             streak
         }
     );
+}
+
+
+/* =========================================================
+   GET PREVIOUS EASTERN DATE
+========================================================= */
+
+function getPreviousEasternDate(
+    dateString
+) {
+
+    const [
+        year,
+        month,
+        day
+    ] =
+        dateString
+            .split("-")
+            .map(Number);
+
+
+    const date =
+        new Date(
+            Date.UTC(
+                year,
+                month - 1,
+                day
+            )
+        );
+
+
+    date.setUTCDate(
+        date.getUTCDate() - 1
+    );
+
+
+    return [
+        date.getUTCFullYear(),
+
+        String(
+            date.getUTCMonth() + 1
+        ).padStart(2, "0"),
+
+        String(
+            date.getUTCDate()
+        ).padStart(2, "0")
+
+    ].join("-");
 }
 
 
