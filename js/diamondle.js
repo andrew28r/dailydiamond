@@ -1418,7 +1418,7 @@ function shareResults(){
     const displayDate = `${month}/${day}/${year}`;
 
     const text =
-`Daily Diamond - ${displayDate}
+`Around The Diamond - ${displayDate}
 
 ${getResultGrid()}`;
 
