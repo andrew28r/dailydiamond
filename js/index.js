@@ -391,9 +391,9 @@ async function loadLeaderboard() {
 
   const { data, error } = await db
     .from("playerData")
-    .select("playerId, wins, rating")
+    .select("playerId, wins")
     .neq("playerId", "andrew28r")
-    .order("rating", { ascending: false })
+    .order("wins", { ascending: false })
     .limit(5);
 
 
@@ -416,13 +416,12 @@ async function loadLeaderboard() {
 
     const row = document.createElement("div");
 
-    row.className = "leaderboard-row";
+    row.className = "leaderboardIndex-row";
 
 
     row.innerHTML = `
       <span>${index + 1}.</span>
       <span>${player.playerId}</span>
-      <span>${player.rating ?? 1000}</span>
       <span>${player.wins}</span>
     `;
 

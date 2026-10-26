@@ -2512,3 +2512,75 @@ width:100%;
   cursor: pointer;
 }
 
+
+
+
+/* =========================
+   INDEX PAGE LEADERBOARD
+   Matches existing .leaderboard
+========================= */
+
+.leaderboardIndex {
+  width: 100%;
+  max-width: 300px;
+  margin: 12px auto 0;
+  padding: 10px 12px;
+  border: 2px solid #c2c2c2;
+  border-radius: 8px;
+  background: transparent;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+.leaderboardIndex h3 {
+  margin: 0 0 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+}
+
+.leaderboardIndex #leaderboardList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.leaderboardIndex-header,
+.leaderboardIndex-row {
+  display: grid;
+  grid-template-columns: 40px 1fr 45px;
+  align-items: center;
+  padding: 6px 4px;
+}
+
+.leaderboardIndex-header {
+  margin-bottom: 4px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid #ddd;
+  font-size: 11px;
+  font-weight: 700;
+  color: #777;
+  text-transform: uppercase;
+}
+
+.leaderboardIndex-row {
+  border-bottom: 1px solid #ddd;
+  font-size: 14px;
+}
+
+.leaderboardIndex-row:last-child {
+  border-bottom: none;
+}
+
+.leaderboardIndex-header span:nth-child(1),
+.leaderboardIndex-row span:nth-child(1),
+.leaderboardIndex-header span:nth-child(2),
+.leaderboardIndex-row span:nth-child(2) {
+  text-align: left;
+}
+
+.leaderboardIndex-header span:nth-child(3),
+.leaderboardIndex-row span:nth-child(3) {
+  text-align: center;
+  font-weight: 700;
+}

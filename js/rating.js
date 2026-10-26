@@ -24,8 +24,8 @@ async function loadRatingLeaderboard() {
 
     const { data: players, error } = await db
         .from("playerData")
-        .select("playerId, rating")
-        .order("rating", { ascending: false });
+        .select("playerId, wins")
+        .order("wins", { ascending: false });
 
 
     if (error) {
@@ -125,7 +125,6 @@ async function loadRatingLeaderboard() {
         row.innerHTML = `
             <span>${index + 1}</span>
             <span>${player.playerId}</span>
-            <span>${Math.round(player.rating ?? 1000)}</span>
             <span>${gamesPlayed}</span>
             <span>${gamesWon}</span>
             <span>${gamesLost}</span>
@@ -137,6 +136,7 @@ async function loadRatingLeaderboard() {
             
         `;
 
+            /*<span>${Math.round(player.rating ?? 1000)}</span>*/
 
         list.appendChild(row);
     }
