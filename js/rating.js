@@ -125,18 +125,21 @@ async function loadRatingLeaderboard() {
         row.innerHTML = `
             <span>${index + 1}</span>
             <span>${player.playerId}</span>
+            <span> </span>
+            <span> </span>
             <span>${gamesPlayed}</span>
             <span>${gamesWon}</span>
             <span>${gamesLost}</span>
             <span>${notFinished}</span>
             <span>${avgGuesses}</span>
             <span>${avgHints}</span>
-            <span>${avgPoints}</span>
             
             
         `;
 
-            /*<span>${Math.round(player.rating ?? 1000)}</span>*/
+            /*<span>${Math.round(player.rating ?? 1000)}</span>
+            
+            <span>${avgPoints}</span>*/
 
         list.appendChild(row);
     }
